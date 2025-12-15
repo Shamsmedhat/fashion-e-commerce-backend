@@ -3,14 +3,32 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "lint": "eslint"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
+    "eslint": "^9.39.2",
     "express": "~4.16.1",
-    "http-errors": "~1.6.3",
-    "jade": "~1.11.0",
-    "morgan": "~1.9.1"
-  }
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "mongoose": "^9.0.1",
+    "morgan": "~1.9.1",
+    "nodemon": "^3.1.11",
+    "validator": "^13.15.23"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.5.0",
+    "prettier": "^3.7.4"
+  },
+  "main": "index.js",
+  "repository": "https://github.com/Shamsmedhat/fashion-e-commerce.git",
+  "author": "Shams <shamsmedhat1@gmail.com>",
+  "license": "MIT"
 }
