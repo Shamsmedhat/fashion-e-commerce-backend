@@ -1,0 +1,361 @@
+[
+  {
+    "name": "Men Classic Leather Sneakers",
+    "description": "Comfortable leather sneakers suitable for everyday casual wear.",
+    "categoryId": "64f000000000000000000004",
+    "coverImage": "men-sneakers.jpg",
+    "images": ["men-sneakers-1.jpg", "men-sneakers-2.jpg"],
+    "variants": [
+      {
+        "sku": "MEN-SHOE-001",
+        "size": "M",
+        "color": "Black",
+        "price": 1200,
+        "priceDiscount": 999,
+        "stock": 15,
+        "soldCount": 8
+      },
+      {
+        "sku": "MEN-SHOE-002",
+        "size": "L",
+        "color": "White",
+        "price": 1250,
+        "stock": 10,
+        "soldCount": 5
+      }
+    ],
+    "ratingsAverage": 4.5,
+    "reviewCount": 23,
+    "isActive": true
+  },
+
+  {
+    "name": "Men Slim Fit Jeans",
+    "description": "High quality slim fit jeans made from durable denim fabric.",
+    "categoryId": "64f000000000000000000006",
+    "coverImage": "men-jeans.jpg",
+    "images": ["men-jeans-1.jpg"],
+    "variants": [
+      {
+        "sku": "MEN-BTM-001",
+        "size": "M",
+        "color": "Blue",
+        "price": 850,
+        "stock": 20,
+        "soldCount": 12
+      },
+      {
+        "sku": "MEN-BTM-002",
+        "size": "L",
+        "color": "Black",
+        "price": 900,
+        "stock": 14,
+        "soldCount": 9
+      }
+    ],
+    "ratingsAverage": 4.2,
+    "reviewCount": 17,
+    "isActive": true
+  },
+
+  {
+    "name": "Men Cotton Hoodie",
+    "description": "Soft cotton hoodie designed for comfort and warmth.",
+    "categoryId": "64f000000000000000000007",
+    "coverImage": "men-hoodie.jpg",
+    "images": ["men-hoodie-1.jpg"],
+    "variants": [
+      {
+        "sku": "MEN-UP-001",
+        "size": "M",
+        "color": "Grey",
+        "price": 950,
+        "stock": 12,
+        "soldCount": 20
+      },
+      {
+        "sku": "MEN-UP-002",
+        "size": "L",
+        "color": "Black",
+        "price": 980,
+        "stock": 9,
+        "soldCount": 14
+      }
+    ],
+    "ratingsAverage": 4.6,
+    "reviewCount": 34,
+    "isActive": true
+  },
+
+  {
+    "name": "Men Leather Belt",
+    "description": "Genuine leather belt perfect for formal and casual outfits.",
+    "categoryId": "64f000000000000000000005",
+    "coverImage": "men-belt.jpg",
+    "images": ["men-belt-1.jpg"],
+    "variants": [
+      {
+        "sku": "MEN-ACC-001",
+        "size": "M",
+        "color": "Brown",
+        "price": 400,
+        "stock": 25,
+        "soldCount": 18
+      }
+    ],
+    "ratingsAverage": 4.3,
+    "reviewCount": 11,
+    "isActive": true
+  },
+
+  {
+    "name": "Men Formal Shirt",
+    "description": "Elegant formal shirt for office and events.",
+    "categoryId": "64f000000000000000000007",
+    "coverImage": "men-shirt.jpg",
+    "images": ["men-shirt-1.jpg"],
+    "variants": [
+      {
+        "sku": "MEN-UP-003",
+        "size": "M",
+        "color": "White",
+        "price": 700,
+        "stock": 18,
+        "soldCount": 10
+      },
+      {
+        "sku": "MEN-UP-004",
+        "size": "L",
+        "color": "Blue",
+        "price": 720,
+        "stock": 14,
+        "soldCount": 8
+      }
+    ],
+    "ratingsAverage": 4.4,
+    "reviewCount": 16,
+    "isActive": true
+  },
+
+  {
+    "name": "Women Running Sneakers",
+    "description": "Lightweight running sneakers designed for daily workouts.",
+    "categoryId": "64f000000000000000000008",
+    "coverImage": "women-sneakers.jpg",
+    "images": ["women-sneakers-1.jpg"],
+    "variants": [
+      {
+        "sku": "WMN-SHOE-001",
+        "size": "M",
+        "color": "Pink",
+        "price": 1100,
+        "priceDiscount": 950,
+        "stock": 18,
+        "soldCount": 25
+      },
+      {
+        "sku": "WMN-SHOE-002",
+        "size": "L",
+        "color": "Black",
+        "price": 1150,
+        "stock": 12,
+        "soldCount": 17
+      }
+    ],
+    "ratingsAverage": 4.7,
+    "reviewCount": 41,
+    "isActive": true
+  },
+
+  {
+    "name": "Women High Waist Jeans",
+    "description": "Stylish high waist jeans with a modern flattering fit.",
+    "categoryId": "64f000000000000000000010",
+    "coverImage": "women-jeans.jpg",
+    "images": ["women-jeans-1.jpg"],
+    "variants": [
+      {
+        "sku": "WMN-BTM-001",
+        "size": "M",
+        "color": "Blue",
+        "price": 900,
+        "stock": 16,
+        "soldCount": 14
+      }
+    ],
+    "ratingsAverage": 4.4,
+    "reviewCount": 29,
+    "isActive": true
+  },
+
+  {
+    "name": "Women Casual Blouse",
+    "description": "Lightweight casual blouse suitable for daily wear.",
+    "categoryId": "64f000000000000000000011",
+    "coverImage": "women-blouse.jpg",
+    "images": ["women-blouse-1.jpg"],
+    "variants": [
+      {
+        "sku": "WMN-UP-001",
+        "size": "M",
+        "color": "White",
+        "price": 650,
+        "stock": 19,
+        "soldCount": 16
+      },
+      {
+        "sku": "WMN-UP-002",
+        "size": "L",
+        "color": "Beige",
+        "price": 680,
+        "stock": 13,
+        "soldCount": 11
+      }
+    ],
+    "ratingsAverage": 4.5,
+    "reviewCount": 21,
+    "isActive": true
+  },
+
+  {
+    "name": "Women Silk Scarf",
+    "description": "Elegant silk scarf that adds style to any outfit.",
+    "categoryId": "64f000000000000000000009",
+    "coverImage": "women-scarf.jpg",
+    "images": ["women-scarf-1.jpg"],
+    "variants": [
+      {
+        "sku": "WMN-ACC-001",
+        "size": "One Size",
+        "color": "Red",
+        "price": 450,
+        "stock": 25,
+        "soldCount": 9
+      }
+    ],
+    "ratingsAverage": 4.8,
+    "reviewCount": 12,
+    "isActive": true
+  },
+
+  {
+    "name": "Women Summer Dress",
+    "description": "Light and elegant summer dress.",
+    "categoryId": "64f000000000000000000011",
+    "coverImage": "women-dress.jpg",
+    "images": ["women-dress-1.jpg"],
+    "variants": [
+      {
+        "sku": "WMN-DRS-001",
+        "size": "M",
+        "color": "Yellow",
+        "price": 1200,
+        "stock": 10,
+        "soldCount": 6
+      },
+      {
+        "sku": "WMN-DRS-002",
+        "size": "L",
+        "color": "Green",
+        "price": 1250,
+        "stock": 8,
+        "soldCount": 4
+      }
+    ],
+    "ratingsAverage": 4.6,
+    "reviewCount": 19,
+    "isActive": true
+  },
+
+  {
+    "name": "Children Sport Sneakers",
+    "description": "Durable sneakers designed for active children.",
+    "categoryId": "64f000000000000000000012",
+    "coverImage": "kids-sneakers.jpg",
+    "images": ["kids-sneakers-1.jpg"],
+    "variants": [
+      {
+        "sku": "KID-SHOE-001",
+        "size": "S",
+        "color": "Blue",
+        "price": 650,
+        "stock": 20,
+        "soldCount": 11
+      }
+    ],
+    "ratingsAverage": 4.3,
+    "reviewCount": 15,
+    "isActive": true
+  },
+
+  {
+    "name": "Children Cartoon T-Shirt",
+    "description": "Colorful cartoon t-shirt made from soft cotton.",
+    "categoryId": "64f000000000000000000015",
+    "coverImage": "kids-tshirt.jpg",
+    "images": ["kids-tshirt-1.jpg"],
+    "variants": [
+      {
+        "sku": "KID-UP-001",
+        "size": "S",
+        "color": "Yellow",
+        "price": 350,
+        "stock": 30,
+        "soldCount": 19
+      },
+      {
+        "sku": "KID-UP-002",
+        "size": "M",
+        "color": "Red",
+        "price": 370,
+        "stock": 22,
+        "soldCount": 14
+      }
+    ],
+    "ratingsAverage": 4.6,
+    "reviewCount": 18,
+    "isActive": true
+  },
+
+  {
+    "name": "Children Denim Shorts",
+    "description": "Comfortable denim shorts perfect for summer activities.",
+    "categoryId": "64f000000000000000000014",
+    "coverImage": "kids-shorts.jpg",
+    "images": ["kids-shorts-1.jpg"],
+    "variants": [
+      {
+        "sku": "KID-BTM-001",
+        "size": "S",
+        "color": "Blue",
+        "price": 400,
+        "stock": 22,
+        "soldCount": 7
+      }
+    ],
+    "ratingsAverage": 4.2,
+    "reviewCount": 9,
+    "isActive": true
+  },
+
+  {
+    "name": "Children Winter Jacket",
+    "description": "Warm winter jacket for cold weather.",
+    "categoryId": "64f000000000000000000012",
+    "coverImage": "kids-jacket.jpg",
+    "images": ["kids-jacket-1.jpg"],
+    "variants": [
+      {
+        "sku": "KID-UP-003",
+        "size": "M",
+        "color": "Navy",
+        "price": 900,
+        "stock": 12,
+        "soldCount": 5
+      }
+    ],
+    "ratingsAverage": 4.5,
+    "reviewCount": 13,
+    "isActive": true
+  }
+]

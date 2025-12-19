@@ -44,7 +44,7 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
-app.use('/api/v1', productRoutes);
+app.use('/api/v1/products', productRoutes);
 
 // TODO: 4) ERROR Handling
 // app.all('*', (req, res, next) => {

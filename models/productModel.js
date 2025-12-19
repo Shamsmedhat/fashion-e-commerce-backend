@@ -26,6 +26,7 @@ const productSchema = new mongoose.Schema({
       price: {
         type: Number,
         required: [true, 'Product must have a price!'],
+        min: [100, 'Minmum product price must be more than or equal 100 EGP!'],
       },
       priceDiscount: {
         type: Number,
@@ -36,6 +37,10 @@ const productSchema = new mongoose.Schema({
           },
           message: 'Discount price ({VALUE}) should ve below regular price!',
         },
+      },
+      soldCount: {
+        type: Number,
+        default: 0,
       },
       stock: {
         type: Number,
@@ -57,12 +62,13 @@ const productSchema = new mongoose.Schema({
     default: 0,
   },
 
-  isActive: Boolean,
+  isActive: { type: Boolean, select: false },
   createdAt: {
     type: Date,
     default: Date.now(),
   },
 });
 
+productSchema.index({ 'variants.price': 1 });
 const Product = mongoose.model('Product', productSchema);
 module.exports = Product;
