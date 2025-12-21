@@ -2,79 +2,109 @@
   {
     "_id": "64f000000000000000000001",
     "name": "Men",
+    "slug": "men",
+    "path": "men",
     "parentId": null
   },
   {
     "_id": "64f000000000000000000002",
     "name": "Women",
+    "slug": "women",
+    "path": "women",
     "parentId": null
   },
   {
     "_id": "64f000000000000000000003",
     "name": "Children",
+    "slug": "children",
+    "path": "children",
     "parentId": null
   },
 
   {
     "_id": "64f000000000000000000004",
     "name": "Shoes",
+    "slug": "men-shoes",
+    "path": "men/shoes",
     "parentId": "64f000000000000000000001"
   },
   {
     "_id": "64f000000000000000000005",
     "name": "Accessories",
+    "slug": "men-accessories",
+    "path": "men/accessories",
     "parentId": "64f000000000000000000001"
   },
   {
     "_id": "64f000000000000000000006",
     "name": "Bottoms",
+    "slug": "men-bottoms",
+    "path": "men/bottoms",
     "parentId": "64f000000000000000000001"
   },
   {
     "_id": "64f000000000000000000007",
     "name": "Upperbody",
+    "slug": "men-upperbody",
+    "path": "men/upperbody",
     "parentId": "64f000000000000000000001"
   },
 
   {
     "_id": "64f000000000000000000008",
     "name": "Shoes",
+    "slug": "women-shoes",
+    "path": "women/shoes",
     "parentId": "64f000000000000000000002"
   },
   {
     "_id": "64f000000000000000000009",
     "name": "Accessories",
+    "slug": "women-accessories",
+    "path": "women/accessories",
     "parentId": "64f000000000000000000002"
   },
   {
     "_id": "64f000000000000000000010",
     "name": "Bottoms",
+    "slug": "women-bottoms",
+    "path": "women/bottoms",
     "parentId": "64f000000000000000000002"
   },
   {
     "_id": "64f000000000000000000011",
     "name": "Upperbody",
+    "slug": "women-upperbody",
+    "path": "women/upperbody",
     "parentId": "64f000000000000000000002"
   },
 
   {
     "_id": "64f000000000000000000012",
     "name": "Shoes",
+    "slug": "children-shoes",
+    "path": "children/shoes",
     "parentId": "64f000000000000000000003"
   },
   {
     "_id": "64f000000000000000000013",
     "name": "Accessories",
+    "slug": "children-accessories",
+    "path": "children/accessories",
     "parentId": "64f000000000000000000003"
   },
   {
     "_id": "64f000000000000000000014",
     "name": "Bottoms",
+    "slug": "children-bottoms",
+    "path": "children/bottoms",
     "parentId": "64f000000000000000000003"
   },
   {
     "_id": "64f000000000000000000015",
     "name": "Upperbody",
+    "slug": "children-upperbody",
+    "path": "children/upperbody",
     "parentId": "64f000000000000000000003"
   }
 ]

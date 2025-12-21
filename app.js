@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 
 const productRoutes = require('./routes/productRoutes');
+const categoryRoutes = require('./routes/categoryRoute');
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use((req, res, next) => {
 
 // 3) ROUTES
 app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/categories', categoryRoutes);
 
 // TODO: 4) ERROR Handling
 // app.all('*', (req, res, next) => {

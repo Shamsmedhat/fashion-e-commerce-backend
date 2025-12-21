@@ -1,5 +1,5 @@
-const APIFeatures = require('../utils/APIFeatures');
 const Product = require('./../models/productModel');
+const APIFeatures = require('../utils/APIFeatures');
 
 // Get Top 6 products Selling
 exports.aliasBestSelling = (req, res, next) => {
@@ -39,7 +39,7 @@ exports.getAllProducts = async (req, res, next) => {
         message: 'No Products found',
       });
     }
-    // 3) Send response
+    // 3) Res
     res.status(200).json({
       status: 'success',
       total: numOfProducts,
@@ -153,6 +153,30 @@ exports.createProduct = async (req, res, next) => {
   }
 };
 
+// Delete Product
+exports.deleteProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+
+    if (!product) {
+      res.status(404).json({
+        status: 'fail',
+        message: 'No product found with this ID',
+      });
+    }
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+
 //? Variants
 // Get Product Variants
 exports.getProductVariants = async (req, res, next) => {
@@ -240,6 +264,94 @@ exports.updateProductVariant = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({
       status: 'error',
+      message: error.message,
+    });
+  }
+};
+
+// Create Product Variant
+exports.createProductVariant = async (req, res, next) => {
+  try {
+    // Allowed fields
+    const requiredFields = ['stock', 'price', 'color', 'size'];
+
+    // New data
+    let newVariant = {};
+
+    // Assign new data for only the allowed fields
+    requiredFields.forEach((el) => {
+      if (req.body[el] !== undefined) {
+        newVariant[el] = req.body[el];
+      }
+    });
+
+    // Validate variant fields
+    if (!newVariant.price || !newVariant.stock) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Variant must include price and stock',
+      });
+    }
+
+    // Update product with new variant
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $push: { variants: newVariant } },
+      { new: true, runValidators: true },
+    );
+
+    // If there is no product found
+    if (!product) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'No product found with this ID',
+      });
+    }
+
+    // Res
+    res.status(201).json({
+      status: 'success',
+      data: product,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+
+// Delete Product Variant
+exports.deleteProductVariant = async (req, res, next) => {
+  try {
+    // Update (Delete variant)
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        'variants._id': req.params.varId,
+      },
+      {
+        $pull: { variants: { _id: req.params.varId } },
+      },
+      { new: true, runValidators: true },
+    );
+
+    // If there is no product found
+    if (!product) {
+      res.status(404).json({
+        status: 'fail',
+        message: 'No product variant found with this ID',
+      });
+    }
+
+    // Res
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
       message: error.message,
     });
   }

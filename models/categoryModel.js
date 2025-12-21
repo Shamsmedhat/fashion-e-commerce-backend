@@ -8,6 +8,8 @@ const categorySchema = new mongoose.Schema({
     minLength: [3, 'Category name must have more than or equal 3 characters!'],
     maxLength: [45, 'Category name must have less than or equal 45 characters!'],
   },
+  slug: String,
+  path: String,
   parentId: {
     type: mongoose.Schema.ObjectId,
     ref: 'Category',

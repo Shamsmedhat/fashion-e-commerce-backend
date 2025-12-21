@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Category = require('./categoryModel');
 
 const productSchema = new mongoose.Schema({
   name: {
@@ -70,5 +71,64 @@ const productSchema = new mongoose.Schema({
 });
 
 productSchema.index({ 'variants.price': 1 });
+
+// Middlewares
+
+// Create the SKU when i add a new product
+productSchema.pre('save', async function () {
+  // Make sure data is exist
+  if (!this.isModified('variants') && !this.isModified('categoryId')) return;
+  if (!this.categoryId) return;
+
+  // Get category with parent data
+  const category = await Category.findById(this.categoryId).populate('parentId');
+
+  // Check for data
+  if (!category || !category.parentId) {
+    throw new Error('Category or parent category not found');
+  }
+
+  // Define the SKU units
+  const categoryName = category.name.slice(0, 3).toUpperCase();
+  const parentCategoryName = category.parentId.name.slice(0, 3).toUpperCase();
+
+  // Create SKU
+  this.variants.forEach((variant, i) => {
+    const color = variant.color.slice(0, 3).toUpperCase();
+    const number = String(i + 1).padStart(3, '0');
+
+    variant.sku = `${parentCategoryName}-${categoryName}-${color}-${variant.size}-${number}`;
+  });
+});
+
+// Create the SKU when i add a new variant
+productSchema.pre('findOneAndUpdate', async function () {
+  // 'variants._id' exists when i want to delete the variant so Skip delete variant
+  //! Skip delete variant
+  if (this.getQuery()['variants._id'] !== undefined) return;
+
+  // New Data
+  const update = this.getUpdate();
+  if (!update.$push?.variants) return;
+
+  // Get category with parent data
+  const product = await Product.findById(this.getQuery()._id).populate('categoryId');
+
+  // Check for data
+  if (!product || !product.categoryId) {
+    throw new Error('Product not found');
+  }
+  // Define the SKU units
+  const categoryName = product.categoryId.name.slice(0, 3).toUpperCase();
+  const parentCategoryName = product.categoryId.slug.split('-')[0].slice(0, 3).toUpperCase();
+
+  // Create SKU
+  const newVariant = update.$push.variants;
+  const color = newVariant.color ? newVariant.color.slice(0, 3).toUpperCase() : 'NON';
+  const number = String(product.variants.length + 1).padStart(3, '0');
+
+  newVariant.sku = `${parentCategoryName}-${categoryName}-${color}-${newVariant.size}-${number}`;
+});
+
 const Product = mongoose.model('Product', productSchema);
 module.exports = Product;
