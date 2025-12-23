@@ -9,8 +9,8 @@ const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 
 // Get the moc data from the files(JSON)
-const productData = JSON.parse(fs.readFileSync(`${__dirname}/data/products.json`, 'utf-8'));
 const categoryData = JSON.parse(fs.readFileSync(`${__dirname}/data/categories.json`, 'utf-8'));
+const productData = JSON.parse(fs.readFileSync(`${__dirname}/data/products.json`, 'utf-8'));
 
 // Connect to DB
 const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
@@ -19,8 +19,8 @@ mongoose.connect(DB).then(() => console.log('DB connection successful!'));
 // Add the data
 const importData = async () => {
   try {
-    await Product.create(productData);
     await Category.create(categoryData);
+    await Product.create(productData);
     console.log('Data added successfully!');
   } catch (error) {
     console.log(`Something went wrong! /n ${error}`);
@@ -31,8 +31,8 @@ const importData = async () => {
 // Delete the Data
 const deleteData = async () => {
   try {
-    await Product.deleteMany();
     await Category.deleteMany();
+    await Product.deleteMany();
     console.log('Data deleted successfully!');
   } catch (error) {
     console.log(`Something went wrong! /n ${error}`);

@@ -1,28 +1,74 @@
 const Product = require('./../models/productModel');
-const APIFeatures = require('../utils/APIFeatures');
+const ALLOWED_VARIANTS_FIELDS = require('../lib/constants/allowedVariantsFields');
+const APIFeatures = require('../lib/utils/APIFeatures');
 
-// Get Top 6 products Selling
+// Get Top 6 products Selling (Alias)
 exports.aliasBestSelling = (req, res, next) => {
   req.query.sort = '-variants.soldCount';
   req.query.limit = '6';
   next();
 };
 
-// Get Top 6 products AVG
+// Get Top 6 products AVG (Alias)
 exports.aliasTopRating = (req, res, next) => {
   req.query.sort = '-ratingsAverage';
   req.query.limit = '6';
   next();
 };
 
+// Create Product
+exports.createProduct = async (req, res, next) => {
+  try {
+    // New variant
+    const newVariant = {};
+
+    if (Array.isArray(req.body.variants) && req.body.variants.length > 0) {
+      const variant = req.body.variants[0];
+
+      // Allowed variant fields
+      ALLOWED_VARIANTS_FIELDS.forEach((el) => {
+        if (variant[el] !== undefined) {
+          newVariant[el] = variant[el];
+        }
+      });
+    } else {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Variants must be an array!',
+      });
+    }
+
+    // Build product data
+    const productData = {
+      ...req.body,
+      variants: Object.keys(newVariant).length ? [newVariant] : [],
+    };
+
+    const product = await Product.create(productData);
+
+    // REs
+    res.status(201).json({
+      status: 'success',
+      data: {
+        product,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+
 // Get All Products
 exports.getAllProducts = async (req, res, next) => {
   try {
     // Get The total number of documents (products)
-    const numOfProducts = await Product.countDocuments();
+    const numOfProducts = await Product.countDocuments({ isActive: true });
 
     // 1) Build the query
-    const features = new APIFeatures(Product.find(), req.query)
+    const features = new APIFeatures(Product.find({ isActive: true }), req.query)
       .filter()
       .sort()
       .limitFields()
@@ -87,6 +133,7 @@ exports.updateProduct = async (req, res, next) => {
   try {
     // Define allowed fields
     // TODO: Add images array to update it
+    // TODO: Add variants fields
     const allowedFields = ['name', 'description', 'categoryId', 'coverImage'];
 
     // Store new Data
@@ -134,29 +181,10 @@ exports.updateProduct = async (req, res, next) => {
   }
 };
 
-// Create Product
-exports.createProduct = async (req, res, next) => {
-  try {
-    const product = await Product.create(req.body);
-
-    res.status(201).json({
-      status: 'success',
-      data: {
-        product,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'fail',
-      message: error.message,
-    });
-  }
-};
-
 // Delete Product
 exports.deleteProduct = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findByIdAndUpdate(req.params.id, { isActive: false });
 
     if (!product) {
       res.status(404).json({
@@ -178,6 +206,47 @@ exports.deleteProduct = async (req, res, next) => {
 };
 
 //? Variants
+// Create Product Variant
+exports.createProductVariant = async (req, res, next) => {
+  try {
+    // New data
+    let newVariant = {};
+
+    // Allowed variant fields
+    ALLOWED_VARIANTS_FIELDS.forEach((el) => {
+      if (req.body[el] !== undefined) {
+        newVariant[el] = req.body[el];
+      }
+    });
+
+    // Update product with new variant
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $push: { variants: newVariant } },
+      { new: true, runValidators: true },
+    );
+
+    // If there is no product found
+    if (!product) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'No product found with this ID',
+      });
+    }
+
+    // Res
+    res.status(201).json({
+      status: 'success',
+      data: product,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
+
 // Get Product Variants
 exports.getProductVariants = async (req, res, next) => {
   try {
@@ -217,21 +286,18 @@ exports.getProductVariants = async (req, res, next) => {
 // Update Product Variant
 exports.updateProductVariant = async (req, res, next) => {
   try {
-    // Define allowed fields
-    const allowedFields = ['size', 'color', 'price', 'stock'];
-
     // Store new Data
-    const updateData = {};
+    const newVariant = {};
 
-    // Assign new data for only the allowed fields
-    allowedFields.forEach((field) => {
+    // Allowed variant fields
+    ALLOWED_VARIANTS_FIELDS.forEach((field) => {
       if (req.body[field] !== undefined) {
-        updateData[`variants.$.${field}`] = req.body[field];
+        newVariant[`variants.$.${field}`] = req.body[field];
       }
     });
 
     // If empty updated data
-    if (!Object.keys(updateData).length) {
+    if (!Object.keys(newVariant).length) {
       return res.status(400).json({
         status: 'fail',
         message: 'No valid product fields provided to update',
@@ -241,7 +307,7 @@ exports.updateProductVariant = async (req, res, next) => {
     // Update
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, 'variants._id': req.params.varId },
-      { $set: updateData },
+      { $set: newVariant },
       {
         new: true,
         runValidators: true,
@@ -269,62 +335,11 @@ exports.updateProductVariant = async (req, res, next) => {
   }
 };
 
-// Create Product Variant
-exports.createProductVariant = async (req, res, next) => {
-  try {
-    // Allowed fields
-    const requiredFields = ['stock', 'price', 'color', 'size'];
-
-    // New data
-    let newVariant = {};
-
-    // Assign new data for only the allowed fields
-    requiredFields.forEach((el) => {
-      if (req.body[el] !== undefined) {
-        newVariant[el] = req.body[el];
-      }
-    });
-
-    // Validate variant fields
-    if (!newVariant.price || !newVariant.stock) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Variant must include price and stock',
-      });
-    }
-
-    // Update product with new variant
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { $push: { variants: newVariant } },
-      { new: true, runValidators: true },
-    );
-
-    // If there is no product found
-    if (!product) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No product found with this ID',
-      });
-    }
-
-    // Res
-    res.status(201).json({
-      status: 'success',
-      data: product,
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'fail',
-      message: error.message,
-    });
-  }
-};
-
 // Delete Product Variant
 exports.deleteProductVariant = async (req, res, next) => {
   try {
     // Update (Delete variant)
+    // TODO: Make an isActive property for the variant
     const product = await Product.findOneAndUpdate(
       {
         _id: req.params.id,

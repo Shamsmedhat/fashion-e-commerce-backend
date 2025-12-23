@@ -1,9 +1,30 @@
 const Category = require('./../models/categoryModel');
-const APIFeatures = require('../utils/APIFeatures');
+const APIFeatures = require('../lib/utils/APIFeatures');
+const { default: mongoose } = require('mongoose');
 
+// Get main categories (Alias)
 exports.aliasMainCategories = (req, res, next) => {
-  req.filter = { parentId: null };
+  req.query.parentId = null;
   next();
+};
+
+// Create Category
+exports.createCategory = async (req, res, next) => {
+  try {
+    const category = await Category.create(req.body);
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        category,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
 };
 
 // Get All Categories
@@ -48,123 +69,131 @@ exports.getAllCategories = async (req, res, next) => {
   }
 };
 
-// // Get Specific Product
-// exports.getProduct = async (req, res, next) => {
-//   try {
-//     const product = await Product.findById(req.params.id);
+// Get Specific Category
+exports.getCategory = async (req, res, next) => {
+  try {
+    const category = await Category.findById(req.params.id);
 
-//     if (!product) {
-//       res.status(404).json({
-//         status: 'fail',
-//         message: 'Product not found',
-//       });
-//     }
+    if (!category) {
+      res.status(40).json({
+        status: 'fail',
+        message: 'Category not found',
+      });
+    }
 
-//     res.status(200).json({
-//       status: 'success',
-//       data: {
-//         product,
-//       },
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       status: 'fail',
-//       message: error.message,
-//     });
-//   }
-// };
+    // Res
+    res.status(200).json({
+      status: 'success',
+      data: {
+        category,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
 
-// // Update Product
-// exports.updateProduct = async (req, res, next) => {
-//   try {
-//     // Define allowed fields
-//     // TODO: Add images array to update it
-//     const allowedFields = ['name', 'description', 'categoryId', 'coverImage'];
+// Get category children
+exports.getCategoryChildren = async (req, res, next) => {
+  try {
+    const categories = await Category.find({ parentId: req.params.id });
 
-//     // Store new Data
-//     const updateData = {};
+    if (!categories) {
+      res.status(40).json({
+        status: 'fail',
+        message: 'Categories not found!',
+      });
+    }
 
-//     // Assign new data for only the allowed fields
-//     allowedFields.forEach((field) => {
-//       if (req.body[field] !== undefined) {
-//         updateData[field] = req.body[field];
-//       }
-//     });
+    // Res
+    res.status(200).json({
+      status: 'success',
+      data: {
+        categories,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
 
-//     // If empty updated data
-//     if (!Object.keys(updateData).length) {
-//       return res.status(400).json({
-//         status: 'fail',
-//         message: 'No valid product fields provided to update',
-//       });
-//     }
+// Update Category
+//? With AI help to get the idea of making a transaction
+//? When we facing sort of bulk data updated
+//? Besniess logic is in the Model
+exports.updateCategory = async (req, res, next) => {
+  // Start the transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-//     // Update
-//     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
-//       new: true,
-//       runValidators: true,
-//     });
+  let newData = {};
 
-//     // If there is no product found
-//     if (!product) {
-//       return res.status(404).json({
-//         status: 'fail',
-//         message: 'Product not found',
-//       });
-//     }
+  // Allowed variant fields
+  ['name', 'parentId'].forEach((field) => {
+    if (req.body[field] !== undefined) {
+      newData[field] = req.body[field];
+    }
+  });
 
-//     // Res
-//     res.status(200).json({
-//       status: 'success',
-//       data: { product },
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       status: 'error',
-//       message: error.message,
-//     });
-//   }
-// };
+  // If empty updated data
+  if (!Object.keys(newData).length) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'No valid product fields provided to update',
+    });
+  }
 
-// // Create Product
-// exports.createProduct = async (req, res, next) => {
-//   try {
-//     const product = await Product.create(req.body);
+  try {
+    const category = await Category.findByIdAndUpdate(req.params.id, newData, {
+      new: true,
+      runValidators: true,
+      session,
+    });
 
-//     res.status(201).json({
-//       status: 'success',
-//       data: {
-//         product,
-//       },
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       status: 'fail',
-//       message: error.message,
-//     });
-//   }
-// };
+    if (!category) throw new Error('Category not found');
 
-// // Delete Product
-// exports.deleteProduct = async (req, res, next) => {
-//   try {
-//     const product = await Product.findByIdAndDelete(req.params.id);
+    await session.commitTransaction();
 
-//     if (!product) {
-//       res.status(404).json({
-//         status: 'fail',
-//         message: 'No product found with this ID',
-//       });
-//     }
+    // Res
+    res.status(200).json({ status: 'success', data: { category } });
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(500).json({
+      status: 'fail',
+      message: err.message,
+    });
+  } finally {
+    session.endSession();
+  }
+};
 
-//     res.status(204).json({
-//       status: 'success',
-//       data: null,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       status: 'fail',
-//       message: error.message,
-//     });
-//   }
-// };
+// Delete Category
+exports.deleteCategory = async (req, res, next) => {
+  try {
+    const category = await Category.findByIdAndUpdate(req.params.id, { isActive: false });
+
+    if (!category) {
+      res.status(404).json({
+        status: 'fail',
+        message: 'No category found with this ID',
+      });
+    }
+
+    // Res
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
+};
