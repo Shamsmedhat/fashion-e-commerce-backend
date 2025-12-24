@@ -30,6 +30,7 @@ const variantSchema = new mongoose.Schema(
       required: [true, 'Product must have a stock, noting the default is one!'],
       default: 1,
     },
+    images: [{ type: String, required: [true, 'Product must have at least one image!'] }],
   },
   {
     id: false,
@@ -46,9 +47,10 @@ const productSchema = new mongoose.Schema(
       trim: true,
       minLength: [3, 'Product name must have more than or equal 3 characters!'],
       maxLength: [45, 'Product name must have less than or equal 45 characters!'],
+      unique: true,
       set: function (val) {
         if (!val) return val;
-        return val.chartAt(0).toUpperCase() + val.slice(1);
+        return val.charAt(0).toUpperCase() + val.slice(1);
       },
     },
     description: {
@@ -78,8 +80,6 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-
-    isActive: { type: Boolean, select: false, default: true },
     createdAt: {
       type: Date,
       default: Date.now(),
@@ -92,7 +92,9 @@ const productSchema = new mongoose.Schema(
   },
 );
 
+// Index
 productSchema.index({ 'variants.price': 1 });
+productSchema.index({ name: 1 });
 
 // Middlewares
 
@@ -123,7 +125,6 @@ productSchema.pre('save', async function () {
   this.variants.forEach((variant, i) => {
     const color = variant.color.slice(0, 3).toUpperCase();
     const number = String(i + 1).padStart(3, '0');
-    //!Warning: Possible error if we get the same data and same last 4 id chars
     const uniqueNum = Date.now().toString().slice(-4);
 
     variant.sku = `${parentCategoryName}-${categoryName}-${color}-${variant.size}-${number}-${uniqueNum}`;
@@ -159,6 +160,14 @@ productSchema.pre('findOneAndUpdate', async function () {
   const uniqueNum = Date.now().toString().slice(-4);
 
   newVariant.sku = `${parentCategoryName}-${categoryName}-${color}-${newVariant.size}-${number}-${uniqueNum}`;
+});
+
+// Delete isActive from the res
+productSchema.set('toJSON', {
+  transform(doc, ret) {
+    delete ret.isActive;
+    return ret;
+  },
 });
 
 const Product = mongoose.model('Product', productSchema);

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -15,6 +16,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     validate: [validator.isEmail, 'Please provide a valid email address!'],
     trim: true,
+    lowercase: true,
   },
   phone: {
     type: String,
@@ -74,11 +76,23 @@ const userSchema = new mongoose.Schema({
   active: {
     type: Boolean,
     default: true,
+    select: false,
   },
   createdAt: {
     type: Date,
     default: Date.now(),
   },
+});
+
+userSchema.pre('save', async function () {
+  // Return if password not modified
+  if (!this.isModified('password')) return;
+
+  // Encrypt the password with cost of 12
+  this.password = await bcrypt.hash(this.password, 12);
+
+  // Delete password confirm field from DB
+  this.passwordConfirm = undefined;
 });
 
 const User = mongoose.model('User', userSchema);

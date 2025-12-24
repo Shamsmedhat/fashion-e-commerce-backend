@@ -13,7 +13,8 @@
         "price": 1200,
         "priceDiscount": 999,
         "stock": 15,
-        "soldCount": 8
+        "soldCount": 8,
+        "images": ["men-shoe-black-1.jpg", "men-shoe-black-2.jpg"]
       },
       {
         "sku": "MEN-SHOE-002",
@@ -21,12 +22,12 @@
         "color": "White",
         "price": 1250,
         "stock": 10,
-        "soldCount": 5
+        "soldCount": 5,
+        "images": ["men-shoe-white-1.jpg", "men-shoe-white-2.jpg"]
       }
     ],
     "ratingsAverage": 4.5,
-    "reviewCount": 23,
-    "isActive": true
+    "reviewCount": 23
   },
 
   {
@@ -42,7 +43,8 @@
         "color": "Blue",
         "price": 850,
         "stock": 20,
-        "soldCount": 12
+        "soldCount": 12,
+        "images": ["men-jeans-blue-1.jpg", "men-jeans-blue-2.jpg"]
       },
       {
         "sku": "MEN-BTM-002",
@@ -50,12 +52,12 @@
         "color": "Black",
         "price": 900,
         "stock": 14,
-        "soldCount": 9
+        "soldCount": 9,
+        "images": ["men-jeans-black-1.jpg", "men-jeans-black-2.jpg"]
       }
     ],
     "ratingsAverage": 4.2,
-    "reviewCount": 17,
-    "isActive": true
+    "reviewCount": 17
   },
 
   {
@@ -71,7 +73,8 @@
         "color": "Grey",
         "price": 950,
         "stock": 12,
-        "soldCount": 20
+        "soldCount": 20,
+        "images": ["men-hoodie-grey-1.jpg", "men-hoodie-grey-2.jpg"]
       },
       {
         "sku": "MEN-UP-002",
@@ -79,12 +82,12 @@
         "color": "Black",
         "price": 980,
         "stock": 9,
-        "soldCount": 14
+        "soldCount": 14,
+        "images": ["men-hoodie-black-1.jpg", "men-hoodie-black-2.jpg"]
       }
     ],
     "ratingsAverage": 4.6,
-    "reviewCount": 34,
-    "isActive": true
+    "reviewCount": 34
   },
 
   {
@@ -100,12 +103,12 @@
         "color": "Brown",
         "price": 400,
         "stock": 25,
-        "soldCount": 18
+        "soldCount": 18,
+        "images": ["men-belt-brown-1.jpg", "men-belt-brown-2.jpg"]
       }
     ],
     "ratingsAverage": 4.3,
-    "reviewCount": 11,
-    "isActive": true
+    "reviewCount": 11
   },
 
   {
@@ -121,7 +124,8 @@
         "color": "White",
         "price": 700,
         "stock": 18,
-        "soldCount": 10
+        "soldCount": 10,
+        "images": ["men-shirt-white-1.jpg", "men-shirt-white-2.jpg"]
       },
       {
         "sku": "MEN-UP-004",
@@ -129,12 +133,12 @@
         "color": "Blue",
         "price": 720,
         "stock": 14,
-        "soldCount": 8
+        "soldCount": 8,
+        "images": ["men-shirt-blue-1.jpg", "men-shirt-blue-2.jpg"]
       }
     ],
     "ratingsAverage": 4.4,
-    "reviewCount": 16,
-    "isActive": true
+    "reviewCount": 16
   },
 
   {
@@ -151,7 +155,8 @@
         "price": 1100,
         "priceDiscount": 950,
         "stock": 18,
-        "soldCount": 25
+        "soldCount": 25,
+        "images": ["women-shoe-pink-1.jpg", "women-shoe-pink-2.jpg"]
       },
       {
         "sku": "WMN-SHOE-002",
@@ -159,12 +164,12 @@
         "color": "Black",
         "price": 1150,
         "stock": 12,
-        "soldCount": 17
+        "soldCount": 17,
+        "images": ["women-shoe-black-1.jpg", "women-shoe-black-2.jpg"]
       }
     ],
     "ratingsAverage": 4.7,
-    "reviewCount": 41,
-    "isActive": true
+    "reviewCount": 41
   },
 
   {
@@ -180,12 +185,12 @@
         "color": "Blue",
         "price": 900,
         "stock": 16,
-        "soldCount": 14
+        "soldCount": 14,
+        "images": ["women-jeans-blue-1.jpg", "women-jeans-blue-2.jpg"]
       }
     ],
     "ratingsAverage": 4.4,
-    "reviewCount": 29,
-    "isActive": true
+    "reviewCount": 29
   },
 
   {
@@ -201,7 +206,8 @@
         "color": "White",
         "price": 650,
         "stock": 19,
-        "soldCount": 16
+        "soldCount": 16,
+        "images": ["women-blouse-white-1.jpg", "women-blouse-white-2.jpg"]
       },
       {
         "sku": "WMN-UP-002",
@@ -209,12 +215,12 @@
         "color": "Beige",
         "price": 680,
         "stock": 13,
-        "soldCount": 11
+        "soldCount": 11,
+        "images": ["women-blouse-beige-1.jpg", "women-blouse-beige-2.jpg"]
       }
     ],
     "ratingsAverage": 4.5,
-    "reviewCount": 21,
-    "isActive": true
+    "reviewCount": 21
   },
 
   {
@@ -230,12 +236,12 @@
         "color": "Red",
         "price": 450,
         "stock": 25,
-        "soldCount": 9
+        "soldCount": 9,
+        "images": ["women-scarf-red-1.jpg", "women-scarf-red-2.jpg"]
       }
     ],
     "ratingsAverage": 4.8,
-    "reviewCount": 12,
-    "isActive": true
+    "reviewCount": 12
   },
 
   {
@@ -251,7 +257,8 @@
         "color": "Yellow",
         "price": 1200,
         "stock": 10,
-        "soldCount": 6
+        "soldCount": 6,
+        "images": ["women-dress-yellow-1.jpg", "women-dress-yellow-2.jpg"]
       },
       {
         "sku": "WMN-DRS-002",
@@ -259,12 +266,12 @@
         "color": "Green",
         "price": 1250,
         "stock": 8,
-        "soldCount": 4
+        "soldCount": 4,
+        "images": ["women-dress-green-1.jpg", "women-dress-green-2.jpg"]
       }
     ],
     "ratingsAverage": 4.6,
-    "reviewCount": 19,
-    "isActive": true
+    "reviewCount": 19
   },
 
   {
@@ -280,12 +287,12 @@
         "color": "Blue",
         "price": 650,
         "stock": 20,
-        "soldCount": 11
+        "soldCount": 11,
+        "images": ["kids-shoe-blue-1.jpg", "kids-shoe-blue-2.jpg"]
       }
     ],
     "ratingsAverage": 4.3,
-    "reviewCount": 15,
-    "isActive": true
+    "reviewCount": 15
   },
 
   {
@@ -301,7 +308,8 @@
         "color": "Yellow",
         "price": 350,
         "stock": 30,
-        "soldCount": 19
+        "soldCount": 19,
+        "images": ["kids-tshirt-yellow-1.jpg", "kids-tshirt-yellow-2.jpg"]
       },
       {
         "sku": "KID-UP-002",
@@ -309,12 +317,12 @@
         "color": "Red",
         "price": 370,
         "stock": 22,
-        "soldCount": 14
+        "soldCount": 14,
+        "images": ["kids-tshirt-red-1.jpg", "kids-tshirt-red-2.jpg"]
       }
     ],
     "ratingsAverage": 4.6,
-    "reviewCount": 18,
-    "isActive": true
+    "reviewCount": 18
   },
 
   {
@@ -330,12 +338,12 @@
         "color": "Blue",
         "price": 400,
         "stock": 22,
-        "soldCount": 7
+        "soldCount": 7,
+        "images": ["kids-shorts-blue-1.jpg", "kids-shorts-blue-2.jpg"]
       }
     ],
     "ratingsAverage": 4.2,
-    "reviewCount": 9,
-    "isActive": true
+    "reviewCount": 9
   },
 
   {
@@ -351,11 +359,32 @@
         "color": "Navy",
         "price": 900,
         "stock": 12,
-        "soldCount": 5
+        "soldCount": 5,
+        "images": ["kids-jacket-navy-1.jpg", "kids-jacket-navy-2.jpg"]
       }
     ],
     "ratingsAverage": 4.5,
-    "reviewCount": 13,
-    "isActive": true
+    "reviewCount": 13
+  },
+
+  {
+    "name": "Children Backpack",
+    "description": "Lightweight backpack suitable for school and trips.",
+    "categoryId": "64f000000000000000000013",
+    "coverImage": "kids-backpack.jpg",
+    "images": ["kids-backpack-1.jpg"],
+    "variants": [
+      {
+        "sku": "KID-ACC-001",
+        "size": "M",
+        "color": "Green",
+        "price": 500,
+        "stock": 18,
+        "soldCount": 6,
+        "images": ["kids-backpack-green-1.jpg", "kids-backpack-green-2.jpg"]
+      }
+    ],
+    "ratingsAverage": 4.4,
+    "reviewCount": 10
   }
 ]

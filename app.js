@@ -1,12 +1,17 @@
 const express = require('express');
+
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 
+const globalErrorHandler = require('./controllers/errorController');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoute');
+const userRoutes = require('./routes/userRoute');
+
+const AppError = require('./lib/utils/appError');
 
 const app = express();
 
@@ -40,6 +45,7 @@ app.use(cookieParser());
 // Test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
+
   // console.log(req.cookies);
   next();
 });
@@ -47,11 +53,14 @@ app.use((req, res, next) => {
 // 3) ROUTES
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/users', userRoutes);
 
-// TODO: 4) ERROR Handling
-// app.all('*', (req, res, next) => {
-//   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-// });
-// app.use(globalErrorHandler);
+//  4) ERROR Handling
+// Catch unhandled routes
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} in this server!`, 404));
+});
+
+app.use(globalErrorHandler);
 
 module.exports = app;
