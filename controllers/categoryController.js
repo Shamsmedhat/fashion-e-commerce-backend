@@ -1,8 +1,8 @@
 const Category = require('./../models/categoryModel');
-const APIFeatures = require('../lib/utils/APIFeatures');
-const { default: mongoose } = require('mongoose');
-const catchAsync = require('../lib/utils/catchAsync');
-const AppError = require('../lib/utils/appError');
+const APIFeatures = require('./../lib/utils/APIFeatures');
+const mongoose = require('mongoose');
+const catchAsync = require('./../lib/utils/catchAsync');
+const AppError = require('./../lib/utils/appError');
 
 // Get main categories (Alias)
 exports.aliasMainCategories = (req, res, next) => {

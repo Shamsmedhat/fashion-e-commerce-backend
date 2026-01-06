@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-const AppError = require('../lib/utils/appError');
+const AppError = require('./../lib/utils/appError');
 
 // Handle Invalid IDs
 const handleCastErrorDB = (err) => {
@@ -70,6 +70,10 @@ module.exports = (err, req, res, next) => {
     // Add 3 other formated Operational errors to client
     // we use AppError class to mark them as Operational
     // to send them formated to client
+
+    // Logging the error for better debugging
+    console.log('ERROR LOG:', err);
+
     let error = { ...err };
     if (err.name === 'CastError') error = handleCastErrorDB(err);
     if (err.code === 11000) error = handleDuplicatedFieldDB(err);

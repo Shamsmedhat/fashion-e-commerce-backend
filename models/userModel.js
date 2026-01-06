@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Please provide your password!'],
+    select: false,
     minLength: [8, 'Password must have more than or equal 8 characters!'],
     match: [
       /^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/,
@@ -84,6 +85,11 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+userSchema.method('correctPassword', async function (candidatePassword, hashedUserPassword) {
+  return await bcrypt.compare(candidatePassword, hashedUserPassword);
+});
+
+// Encrypt the user password
 userSchema.pre('save', async function () {
   // Return if password not modified
   if (!this.isModified('password')) return;

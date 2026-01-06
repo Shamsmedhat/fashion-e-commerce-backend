@@ -94,7 +94,6 @@ const productSchema = new mongoose.Schema(
 
 // Index
 productSchema.index({ 'variants.price': 1 });
-productSchema.index({ name: 1 });
 
 // Middlewares
 

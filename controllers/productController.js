@@ -1,8 +1,8 @@
 const Product = require('./../models/productModel');
-const ALLOWED_VARIANTS_FIELDS = require('../lib/constants/allowedVariantsFields');
-const APIFeatures = require('../lib/utils/APIFeatures');
-const catchAsync = require('../lib/utils/catchAsync');
-const AppError = require('../lib/utils/appError');
+const ALLOWED_VARIANTS_FIELDS = require('./../lib/constants/allowedVariantsFields');
+const APIFeatures = require('./../lib/utils/APIFeatures');
+const catchAsync = require('./../lib/utils/catchAsync');
+const AppError = require('./../lib/utils/appError');
 
 // Get Top 6 products Selling (Alias)
 exports.aliasBestSelling = (req, res, next) => {
