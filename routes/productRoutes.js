@@ -1,5 +1,6 @@
 const express = require('express');
 const productController = require('./../controllers/productController');
+const authController = require('./../controllers/authController');
 const router = express.Router();
 
 //? Alias
@@ -13,22 +14,49 @@ router.route('/top-rating').get(productController.aliasTopRating, productControl
 
 //? Product
 // GET/Create Products
-router.route('/').get(productController.getAllProducts).post(productController.createProduct);
+router
+  .route('/')
+  .get(productController.getAllProducts)
+  .post(
+    authController.protect,
+    authController.restrictTo('admin'),
+    productController.createProduct,
+  );
 
 // GET/Delete Product
-router.route('/:id').get(productController.getProduct).delete(productController.deleteProduct);
+router
+  .route('/:id')
+  .get(productController.getProduct)
+  .delete(
+    authController.protect,
+    authController.restrictTo('admin'),
+    productController.deleteProduct,
+  );
 
 // UPDATE Product
-router.route('/:id').patch(productController.updateProduct);
+router
+  .route('/:id')
+  .patch(
+    authController.protect,
+    authController.restrictTo('admin'),
+    productController.updateProduct,
+  );
 
 //? Variants
 // GET/Create Products Variants
 router
   .route('/:id/variants')
   .get(productController.getProductVariants)
-  .post(productController.createProductVariant);
+  .post(
+    authController.protect,
+    authController.restrictTo('admin'),
+    productController.createProductVariant,
+  );
 
-// UPDATE Product Variant
+// Protect
+router.use(authController.protect, authController.restrictTo('admin'));
+
+// Update/Delete Product Variant
 router
   .route('/:id/variants/:varId')
   .patch(productController.updateProductVariant)

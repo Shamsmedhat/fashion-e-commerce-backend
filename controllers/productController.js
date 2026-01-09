@@ -1,4 +1,5 @@
 const Product = require('./../models/productModel');
+const Category = require('./../models/categoryModel');
 const ALLOWED_VARIANTS_FIELDS = require('./../lib/constants/allowedVariantsFields');
 const APIFeatures = require('./../lib/utils/APIFeatures');
 const catchAsync = require('./../lib/utils/catchAsync');
@@ -58,8 +59,24 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   // Get The total number of documents (products)
   const numOfProducts = await Product.countDocuments();
 
+  // Handle mainCategory filter
+  let filter = {};
+
+  if (req.query.mainCategory) {
+    // Get all subcategory IDs under the main category
+    const categories = await Category.find({
+      $or: [{ _id: req.query.mainCategory }, { parentId: req.query.mainCategory }],
+    }).select('_id');
+
+    const categoryIds = categories.map((cat) => cat._id);
+    filter.categoryId = { $in: categoryIds };
+
+    // Remove mainCategory from query string so it doesn't interfere with APIFeatures
+    delete req.query.mainCategory;
+  }
+
   // 1) Build the query
-  const features = new APIFeatures(Product.find(), req.query)
+  const features = new APIFeatures(Product.find(filter), req.query)
     .filter()
     .sort()
     .limitFields()
