@@ -5,7 +5,14 @@ const variantSchema = new mongoose.Schema(
   {
     sku: { type: String, unique: true },
     size: { type: String, enum: ['S', 'M', 'L', 'XL', 'XXL'], default: 'M' },
-    color: String,
+    color: {
+      type: String,
+      default: 'white',
+      set: function (val) {
+        if (!val) return val;
+        return val.toLowerCase();
+      },
+    },
     price: {
       type: Number,
       required: [true, 'Product must have a price!'],

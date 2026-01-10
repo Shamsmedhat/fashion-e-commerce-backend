@@ -1,3 +1,4 @@
+const url = require('url');
 const Product = require('./../models/productModel');
 const Category = require('./../models/categoryModel');
 const ALLOWED_VARIANTS_FIELDS = require('./../lib/constants/allowedVariantsFields');
@@ -71,8 +72,116 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     const categoryIds = categories.map((cat) => cat._id);
     filter.categoryId = { $in: categoryIds };
 
-    // Remove mainCategory from query string so it doesn't interfere with APIFeatures
+    // Removeing mainCategory from query string so it doesn't interfere with APIFeatures
     delete req.query.mainCategory;
+  }
+
+  // Extract variant filters from query (e.g., variants.color, variants.size)
+  const variantFilters = {};
+
+  // Parse raw query string to handle duplicate keys (e.g., variants.color=white&variants.color=black)
+  // Manually parse to collect all values for duplicate keys
+  const parsedUrl = url.parse(req.originalUrl || req.url, false);
+  const rawQueryParams = {};
+
+  // Get the raw query string (part after ?)
+  const queryStringPart = parsedUrl.query || '';
+
+  if (queryStringPart) {
+    queryStringPart.split('&').forEach((param) => {
+      const equalIndex = param.indexOf('=');
+      if (equalIndex !== -1) {
+        const key = decodeURIComponent(param.substring(0, equalIndex));
+        const value = decodeURIComponent(param.substring(equalIndex + 1));
+        if (key && key.startsWith('variants.')) {
+          if (!rawQueryParams[key]) {
+            rawQueryParams[key] = [];
+          }
+          rawQueryParams[key].push(value || '');
+        }
+      }
+    });
+  }
+
+  // Process variant filters from parsed params
+  Object.keys(rawQueryParams).forEach((key) => {
+    const variantField = key.replace('variants.', '');
+    // Check if it's a valid variant field
+    if (ALLOWED_VARIANTS_FIELDS.includes(variantField)) {
+      let value = rawQueryParams[key];
+
+      // If only one value, convert to single value (unless it's comma-separated)
+      if (value.length === 1 && typeof value[0] === 'string' && !value[0].includes(',')) {
+        value = value[0];
+      } else if (value.length === 1 && typeof value[0] === 'string' && value[0].includes(',')) {
+        // Handle comma-separated single value
+        value = value[0].split(',').map((v) => v.trim());
+      }
+      // Otherwise, value is already an array with multiple values
+
+      // Convert to proper type (string fields: lowercase, numeric fields: convert to number)
+      if (variantField === 'color' || variantField === 'size') {
+        // String fields - lowercase them
+        if (Array.isArray(value)) {
+          variantFilters[variantField] = { $in: value.map((v) => v.toLowerCase()) };
+        } else {
+          variantFilters[variantField] = value.toLowerCase();
+        }
+      } else {
+        // Numeric fields (price, stock, priceDiscount) - convert to numbers
+        if (Array.isArray(value)) {
+          variantFilters[variantField] = { $in: value.map((v) => Number(v)) };
+        } else {
+          variantFilters[variantField] = Number(value);
+        }
+      }
+      // Remove from query so it doesn't interfere with APIFeatures
+      delete req.query[key];
+    }
+  });
+
+  // Also check req.query for variant filters that might have been parsed by Express
+  // (handles cases where Express might have parsed them differently)
+  Object.keys(req.query)
+    .filter((key) => key.startsWith('variants.') && !rawQueryParams[key])
+    .forEach((key) => {
+      const variantField = key.replace('variants.', '');
+      if (ALLOWED_VARIANTS_FIELDS.includes(variantField)) {
+        let value = req.query[key];
+
+        // Handle multiple values: arrays or comma-separated strings
+        if (!Array.isArray(value) && typeof value === 'string' && value.includes(',')) {
+          value = value.split(',').map((v) => v.trim());
+        } else if (!Array.isArray(value)) {
+          value = [value];
+        }
+
+        // Convert to proper type
+        if (variantField === 'color' || variantField === 'size') {
+          if (value.length === 1) {
+            variantFilters[variantField] = value[0].toLowerCase();
+          } else {
+            variantFilters[variantField] = { $in: value.map((v) => v.toLowerCase()) };
+          }
+        } else {
+          if (value.length === 1) {
+            variantFilters[variantField] = Number(value[0]);
+          } else {
+            variantFilters[variantField] = { $in: value.map((v) => Number(v)) };
+          }
+        }
+        delete req.query[key];
+      }
+    });
+
+  // Build variant filter query for MongoDB
+  // Use $elemMatch to find products where at least one variant matches ALL the filters
+  if (Object.keys(variantFilters).length > 0) {
+    const mongoVariantFilter = {};
+    Object.keys(variantFilters).forEach((field) => {
+      mongoVariantFilter[field] = variantFilters[field];
+    });
+    filter['variants'] = { $elemMatch: mongoVariantFilter };
   }
 
   // 1) Build the query
@@ -86,7 +195,51 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   // Excute the query after finishing the build
   const products = await features.query;
 
-  // 3) Res
+  // 3) Filter variants in each product to only include matching variants
+  if (Object.keys(variantFilters).length > 0) {
+    products.forEach((product) => {
+      product.variants = product.variants.filter((variant) => {
+        return Object.keys(variantFilters).every((field) => {
+          const filterValue = variantFilters[field];
+          const variantValue = variant[field];
+
+          if (filterValue && typeof filterValue === 'object' && filterValue.$in) {
+            // Handle array of values (e.g., { $in: ['white', 'black'] } or { $in: [100, 200] })
+            if (field === 'color' || field === 'size') {
+              // String fields - lowercase for comparison
+              return filterValue.$in.includes(
+                typeof variantValue === 'string' ? variantValue.toLowerCase() : variantValue,
+              );
+            } else {
+              // Numeric fields - compare as numbers
+              return filterValue.$in.includes(
+                typeof variantValue === 'number' ? variantValue : Number(variantValue),
+              );
+            }
+          } else {
+            // Handle single value
+            if (field === 'color' || field === 'size') {
+              // String fields - lowercase for comparison
+              const normalizedFilterValue =
+                typeof filterValue === 'string' ? filterValue.toLowerCase() : filterValue;
+              const normalizedVariantValue =
+                typeof variantValue === 'string' ? variantValue.toLowerCase() : variantValue;
+              return normalizedFilterValue === normalizedVariantValue;
+            } else {
+              // Numeric fields - compare as numbers
+              const normalizedFilterValue =
+                typeof filterValue === 'number' ? filterValue : Number(filterValue);
+              const normalizedVariantValue =
+                typeof variantValue === 'number' ? variantValue : Number(variantValue);
+              return normalizedFilterValue === normalizedVariantValue;
+            }
+          }
+        });
+      });
+    });
+  }
+
+  // 4) Res
   res.status(200).json({
     status: 'success',
     total: numOfProducts,
