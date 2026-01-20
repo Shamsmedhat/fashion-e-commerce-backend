@@ -18,6 +18,10 @@ const app = express();
 
 // 1) GLOBAL MIDDLEWARES
 
+// Trust proxy - IMPORTANT for deployment on Vercel, Heroku, etc.
+// This allows Express to trust the X-Forwarded-* headers
+app.set('trust proxy', 1);
+
 // Serving static files
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -31,7 +35,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Limit requests
 const limiter = rateLimit({
-  max: 1000,
+  max: 100,
   windowMs: 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour!',
 });
