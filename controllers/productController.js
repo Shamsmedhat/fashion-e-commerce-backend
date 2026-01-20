@@ -4,7 +4,7 @@ const Category = require('./../models/categoryModel');
 const ALLOWED_VARIANTS_FIELDS = require('./../lib/constants/allowedVariantsFields');
 const catchAsync = require('./../lib/utils/catchAsync');
 const AppError = require('./../lib/utils/appError');
-const APIFeatures = require('../lib/utils/apiFeatures');
+const APIFeatures = require('./../lib/utils/apiFeatures');
 const multer = require('multer');
 const sharp = require('sharp');
 
