@@ -10,6 +10,7 @@ const globalErrorHandler = require('./controllers/errorController');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoute');
 const userRoutes = require('./routes/userRoute');
+const bagRoutes = require('./routes/bagRoutes');
 
 const AppError = require('./lib/utils/appError');
 
@@ -54,6 +55,7 @@ app.use((req, res, next) => {
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/bags', bagRoutes);
 
 //  4) ERROR Handling
 // Catch unhandled routes

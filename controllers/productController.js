@@ -2,9 +2,85 @@ const url = require('url');
 const Product = require('./../models/productModel');
 const Category = require('./../models/categoryModel');
 const ALLOWED_VARIANTS_FIELDS = require('./../lib/constants/allowedVariantsFields');
-const APIFeatures = require('./../lib/utils/APIFeatures');
 const catchAsync = require('./../lib/utils/catchAsync');
 const AppError = require('./../lib/utils/appError');
+const APIFeatures = require('../lib/utils/apiFeatures');
+const multer = require('multer');
+const sharp = require('sharp');
+
+// Add these helper functions after your imports
+const getImageUrl = (req, filename) => {
+  if (!filename) return null;
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  return `${baseUrl}/img/products/${filename}`;
+};
+
+const addImageUrlsToProduct = (req, product) => {
+  const productObj = product.toObject ? product.toObject() : product;
+
+  return {
+    ...productObj,
+    coverImage: getImageUrl(req, productObj.coverImage),
+    images: productObj.images ? productObj.images.map((img) => getImageUrl(req, img)) : [],
+  };
+};
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images'), false);
+  }
+};
+
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+
+exports.uploadProductImages = upload.fields([
+  { name: 'coverImage', maxCount: 1 },
+  {
+    name: 'images',
+    maxCount: 3,
+  },
+]);
+
+exports.resizeProductImage = catchAsync(async (req, res, next) => {
+  // Check if files exist
+  if (!req.files) return next();
+
+  // 1) Process Cover Image
+  if (req.files.coverImage && req.files.coverImage[0]) {
+    req.body.coverImage = `product-${req.user.id}-${Date.now()}-cover.jpeg`;
+
+    await sharp(req.files.coverImage[0].buffer)
+      .resize(1200, 1200)
+      .toFormat('jpeg')
+      .jpeg({ quality: 90 })
+      .toFile(`public/img/products/${req.body.coverImage}`);
+  }
+
+  // 2) Process Multiple Images
+  if (req.files.images && req.files.images.length > 0) {
+    req.body.images = []; // Fixed typo: was req.bodt.images
+
+    await Promise.all(
+      req.files.images.map(async (file, i) => {
+        const filename = `product-${req.user.id}-${Date.now()}-${i + 1}.jpeg`;
+
+        await sharp(file.buffer)
+          .resize(1200, 1200)
+          .toFormat('jpeg')
+          .jpeg({ quality: 90 })
+          .toFile(`public/img/products/${filename}`); // Fixed: added missing /
+
+        req.body.images.push(filename);
+      }),
+    );
+  }
+
+  next();
+});
 
 // Get Top 6 products Selling (Alias)
 exports.aliasBestSelling = (req, res, next) => {
@@ -22,6 +98,17 @@ exports.aliasTopRating = (req, res, next) => {
 
 // Create Product
 exports.createProduct = catchAsync(async (req, res, next) => {
+  // Parse variants if it's a JSON string (from form-data)
+  if (typeof req.body.variants === 'string') {
+    try {
+      req.body.variants = JSON.parse(req.body.variants);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log(err);
+      return next(new AppError('Invalid variants format. Must be valid JSON.', 400));
+    }
+  }
+
   // New variant
   const newVariant = {};
 
@@ -40,17 +127,24 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 
   // Build product data
   const productData = {
-    ...req.body,
+    name: req.body.name,
+    description: req.body.description,
+    categoryId: req.body.categoryId,
+    coverImage: req.body.coverImage, // Set by resizeProductImage middleware
+    images: req.body.images || [], // Set by resizeProductImage middleware
     variants: Object.keys(newVariant).length ? [newVariant] : [],
   };
 
   const product = await Product.create(productData);
 
-  // REs
+  // Add full URLs to the response
+  const productWithUrls = addImageUrlsToProduct(req, product);
+
+  // Response
   res.status(201).json({
     status: 'success',
     data: {
-      product,
+      product: productWithUrls,
     },
   });
 });
@@ -239,13 +333,16 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     });
   }
 
+  // After getting products, add image URLs
+  const productsWithUrls = products.map((product) => addImageUrlsToProduct(req, product));
+
   // 4) Res
   res.status(200).json({
     status: 'success',
     total: numOfProducts,
     results: products.length,
     data: {
-      products,
+      products: productsWithUrls,
     },
   });
 });
@@ -258,21 +355,21 @@ exports.getProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('No product found with this ID!', 404));
   }
 
+  const productWithUrls = addImageUrlsToProduct(req, product);
+
   // Res
   res.status(200).json({
     status: 'success',
     data: {
-      product,
+      product: productWithUrls,
     },
   });
 });
 
 // Update Product
 exports.updateProduct = catchAsync(async (req, res, next) => {
-  // Define allowed fields
-  // TODO: Add images array to update it
-  // TODO: Add variants fields
-  const allowedFields = ['name', 'description', 'categoryId', 'coverImage'];
+  // Define allowed fields (now includes 'images')
+  const allowedFields = ['name', 'description', 'categoryId', 'coverImage', 'images'];
 
   // Store new Data
   const updateData = {};
@@ -300,10 +397,13 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('No product found with this ID', 404));
   }
 
+  // Add full URLs to the response
+  const productWithUrls = addImageUrlsToProduct(req, product);
+
   // Res
   res.status(200).json({
     status: 'success',
-    data: { product },
+    data: { product: productWithUrls },
   });
 });
 

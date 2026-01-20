@@ -62,17 +62,6 @@ const userSchema = new mongoose.Schema({
       isDefault: Boolean,
     },
   ],
-  cart: {
-    items: [
-      {
-        productId: mongoose.Schema.ObjectId,
-        variantSku: String,
-        quantity: Number,
-        addedAt: Date,
-      },
-    ],
-    updatedAt: Date,
-  },
   wishlist: [{ type: mongoose.Schema.ObjectId, ref: 'Product' }],
   active: {
     type: Boolean,

@@ -4,6 +4,7 @@ const { promisify } = require('util');
 
 const AppError = require('./../lib/utils/appError');
 const User = require('./../models/userModel');
+const Bag = require('./../models/bagModel');
 const mongoose = require('mongoose');
 
 const siginToken = (id) => {
@@ -86,15 +87,27 @@ exports.login = catchAsync(async (req, res, next) => {
   // 3. Create the token
   const token = siginToken(user._id);
 
+  // 4. Get or create user's bag
+  let bag = await Bag.findOne({ userId: user._id });
+  if (!bag) {
+    bag = await Bag.create({ userId: user._id, items: [] });
+  }
+
   // Remove password from the res
   user.password = undefined;
 
-  // 4. Send the res
+  // 5. Send the res
   res.status(200).json({
     status: 200,
     token,
     data: {
       user,
+      bag: {
+        _id: bag._id,
+        items: bag.items,
+        totalItems: bag.items.length,
+        updatedAt: bag.updatedAt,
+      },
     },
   });
 });
