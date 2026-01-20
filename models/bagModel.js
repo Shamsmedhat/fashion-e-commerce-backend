@@ -5,7 +5,6 @@ const bagSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: [true, 'Bag must belong to a user!'],
-    unique: true,
   },
 
   items: [
