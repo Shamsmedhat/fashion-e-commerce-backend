@@ -110,16 +110,20 @@ exports.createProduct = catchAsync(async (req, res, next) => {
   }
 
   // New variant
-  const newVariant = {};
+  let newVariants = [];
 
   if (Array.isArray(req.body.variants) && req.body.variants.length > 0) {
-    const variant = req.body.variants[0];
+    newVariants = req.body.variants.map((variant) => {
+      const filteredVariant = {};
 
-    // Allowed variant fields
-    ALLOWED_VARIANTS_FIELDS.forEach((el) => {
-      if (variant[el] !== undefined) {
-        newVariant[el] = variant[el];
-      }
+      // Allowed variant fields
+      ALLOWED_VARIANTS_FIELDS.forEach((el) => {
+        if (variant[el] !== undefined) {
+          filteredVariant[el] = variant[el];
+        }
+      });
+
+      return filteredVariant;
     });
   } else {
     return next(new AppError('Variants must be an array!', 400));
@@ -130,9 +134,11 @@ exports.createProduct = catchAsync(async (req, res, next) => {
     name: req.body.name,
     description: req.body.description,
     categoryId: req.body.categoryId,
-    coverImage: req.body.coverImage, // Set by resizeProductImage middleware
-    images: req.body.images || [], // Set by resizeProductImage middleware
-    variants: Object.keys(newVariant).length ? [newVariant] : [],
+    // Set by resizeProductImage middleware
+    coverImage: req.body.coverImage,
+    // Set by resizeProductImage middleware
+    images: req.body.images || [],
+    variants: newVariants,
   };
 
   const product = await Product.create(productData);
