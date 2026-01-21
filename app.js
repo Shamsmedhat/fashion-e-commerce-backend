@@ -33,13 +33,21 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Limit requests
-const limiter = rateLimit({
-  max: 100,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again in an hour!',
+// General browsing - Products & Categories
+const browseLimiter = rateLimit({
+  max: 200,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  message: 'Too many requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-app.use('/api', limiter);
+
+// Bag operations (add, update, remove)
+const bagLimiter = rateLimit({
+  max: 30,
+  windowMs: 60 * 1000, // 1 minute
+  message: 'Too many bag operations, please slow down.',
+});
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: '10kb' }));
@@ -56,10 +64,10 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
-app.use('/api/v1/products', productRoutes);
-app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/products', browseLimiter, productRoutes);
+app.use('/api/v1/categories', browseLimiter, categoryRoutes);
 app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/bags', bagRoutes);
+app.use('/api/v1/bags', bagLimiter, bagRoutes);
 
 //  4) ERROR Handling
 // Catch unhandled routes

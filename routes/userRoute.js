@@ -1,13 +1,38 @@
 const express = require('express');
 const authController = require('./../controllers/authController');
 const bagController = require('./../controllers/bagController');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
-router.route('/signup').post(authController.signup);
-router.route('/login').post(authController.login);
-router.route('/logout').get(authController.logout);
+// Auth limiter for signup/login
+const authLimiter = rateLimit({
+  max: 5,
+  windowMs: 15 * 60 * 1000,
+  message: 'Too many authentication attempts, please try again in 15 minutes.',
+  skipSuccessfulRequests: true,
+});
+
+// Bag limiter for add to bag
+const bagLimiter = rateLimit({
+  max: 30,
+  windowMs: 60 * 1000,
+  message: 'Too many bag operations, please slow down.',
+});
+
+// General user operations limiter
+const userLimiter = rateLimit({
+  max: 50,
+  windowMs: 15 * 60 * 1000,
+  message: 'Too many requests, please try again later.',
+});
+
+// Auth routes with strict limiting
+router.route('/signup').post(authLimiter, authController.signup);
+router.route('/login').post(authLimiter, authController.login);
+router.route('/logout').get(userLimiter, authController.logout);
 
 // Add to bag (requires authentication)
-router.route('/bag/add').post(authController.protect, bagController.addToBag);
+// Bag route with separate limiting
+router.route('/bag/add').post(bagLimiter, authController.protect, bagController.addToBag);
 
 module.exports = router;
