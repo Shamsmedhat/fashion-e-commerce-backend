@@ -8,6 +8,32 @@ const APIFeatures = require('./../lib/utils/apiFeatures');
 const multer = require('multer');
 const sharp = require('sharp');
 const addImageUrlsToProduct = require('../lib/utils/addImageUrlsToProducts');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'products',
+        resource_type: 'image',
+        transformation: [{ quality: 'auto' }, { fetch_format: 'auto' }],
+        public_id: `product-${Date.now()}`,
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      },
+    );
+    streamifier.createReadStream(buffer).pipe(uploadStream);
+  });
+};
 
 const multerStorage = multer.memoryStorage();
 
@@ -30,35 +56,34 @@ exports.uploadProductImages = upload.fields([
 ]);
 
 exports.resizeProductImage = catchAsync(async (req, res, next) => {
-  // Check if files exist
   if (!req.files) return next();
 
   // 1) Process Cover Image
   if (req.files.coverImage && req.files.coverImage[0]) {
-    req.body.coverImage = `product-${req.user.id}-${Date.now()}-cover.jpeg`;
-
-    await sharp(req.files.coverImage[0].buffer)
+    const resizedBuffer = await sharp(req.files.coverImage[0].buffer)
       .resize(1200, 1200)
       .toFormat('jpeg')
       .jpeg({ quality: 90 })
-      .toFile(`public/img/products/${req.body.coverImage}`);
+      .toBuffer();
+
+    const result = await uploadToCloudinary(resizedBuffer);
+    req.body.coverImage = result.secure_url; // Full URL
   }
 
   // 2) Process Multiple Images
   if (req.files.images && req.files.images.length > 0) {
-    req.body.images = []; // Fixed typo: was req.bodt.images
+    req.body.images = [];
 
     await Promise.all(
-      req.files.images.map(async (file, i) => {
-        const filename = `product-${req.user.id}-${Date.now()}-${i + 1}.jpeg`;
-
-        await sharp(file.buffer)
+      req.files.images.map(async (file) => {
+        const resizedBuffer = await sharp(file.buffer)
           .resize(1200, 1200)
           .toFormat('jpeg')
           .jpeg({ quality: 90 })
-          .toFile(`public/img/products/${filename}`); // Fixed: added missing /
+          .toBuffer();
 
-        req.body.images.push(filename);
+        const result = await uploadToCloudinary(resizedBuffer);
+        req.body.images.push(result.secure_url);
       }),
     );
   }
