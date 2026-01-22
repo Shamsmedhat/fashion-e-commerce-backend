@@ -2,7 +2,6 @@ const catchAsync = require('./../lib/utils/catchAsync');
 const AppError = require('./../lib/utils/appError');
 const Product = require('./../models/productModel');
 const Bag = require('./../models/bagModel');
-const addImageUrlsToProduct = require('../lib/utils/addImageUrlsToProducts');
 
 // Get user's bag
 exports.getMyBag = catchAsync(async (req, res, next) => {
@@ -39,9 +38,6 @@ exports.getMyBagItems = catchAsync(async (req, res, next) => {
     select: 'name slug',
   });
 
-  // After getting products, add image URLs
-  products = products.map((product) => addImageUrlsToProduct(req, product));
-
   // Create a map for quick product lookup
   const productMap = new Map();
   products.forEach((product) => {
@@ -63,8 +59,6 @@ exports.getMyBagItems = catchAsync(async (req, res, next) => {
         error: 'Product not found',
       };
     }
-
-    console.log('product', product);
 
     // Find the variant by SKU
     const variant = product.variants.find((v) => v.sku === item.variantSku);

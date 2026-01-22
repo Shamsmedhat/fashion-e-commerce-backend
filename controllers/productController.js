@@ -7,7 +7,6 @@ const AppError = require('./../lib/utils/appError');
 const APIFeatures = require('./../lib/utils/apiFeatures');
 const multer = require('multer');
 const sharp = require('sharp');
-const addImageUrlsToProduct = require('../lib/utils/addImageUrlsToProducts');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
@@ -152,14 +151,11 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 
   const product = await Product.create(productData);
 
-  // Add full URLs to the response
-  const productWithUrls = addImageUrlsToProduct(req, product);
-
   // Response
   res.status(201).json({
     status: 'success',
     data: {
-      product: productWithUrls,
+      product,
     },
   });
 });
@@ -349,7 +345,6 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   }
 
   // After getting products, add image URLs
-  // const productsWithUrls = products.map((product) => addImageUrlsToProduct(req, product));
 
   // 4) Res
   res.status(200).json({
@@ -370,13 +365,11 @@ exports.getProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('No product found with this ID!', 404));
   }
 
-  const productWithUrls = addImageUrlsToProduct(req, product);
-
   // Res
   res.status(200).json({
     status: 'success',
     data: {
-      product: productWithUrls,
+      product,
     },
   });
 });
@@ -412,13 +405,10 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('No product found with this ID', 404));
   }
 
-  // Add full URLs to the response
-  const productWithUrls = addImageUrlsToProduct(req, product);
-
   // Res
   res.status(200).json({
     status: 'success',
-    data: { product: productWithUrls },
+    data: { product },
   });
 });
 
