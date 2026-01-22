@@ -349,7 +349,7 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   }
 
   // After getting products, add image URLs
-  const productsWithUrls = products.map((product) => addImageUrlsToProduct(req, product));
+  // const productsWithUrls = products.map((product) => addImageUrlsToProduct(req, product));
 
   // 4) Res
   res.status(200).json({
@@ -357,7 +357,7 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     total: numOfProducts,
     results: products.length,
     data: {
-      products: productsWithUrls,
+      products,
     },
   });
 });
