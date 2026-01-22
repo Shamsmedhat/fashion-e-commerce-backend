@@ -7,23 +7,7 @@ const AppError = require('./../lib/utils/appError');
 const APIFeatures = require('./../lib/utils/apiFeatures');
 const multer = require('multer');
 const sharp = require('sharp');
-
-// Add these helper functions after your imports
-const getImageUrl = (req, filename) => {
-  if (!filename) return null;
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  return `${baseUrl}/img/products/${filename}`;
-};
-
-const addImageUrlsToProduct = (req, product) => {
-  const productObj = product.toObject ? product.toObject() : product;
-
-  return {
-    ...productObj,
-    coverImage: getImageUrl(req, productObj.coverImage),
-    images: productObj.images ? productObj.images.map((img) => getImageUrl(req, img)) : [],
-  };
-};
+const addImageUrlsToProduct = require('../lib/utils/addImageUrlsToProducts');
 
 const multerStorage = multer.memoryStorage();
 
