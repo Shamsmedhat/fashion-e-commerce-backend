@@ -10,10 +10,18 @@ const handleCastErrorDB = (err) => {
 
 // Handle Duplicated fields
 const handleDuplicatedFieldDB = (err) => {
-  const value = err.message.match(/(["'])(\\?.)*?\1/)[0];
-  const message = `Duplicate field value: ${value}. Please use another value.`;
+  const field = Object.keys(err.keyValue)[0];
+  const value = err.keyValue[field];
 
-  return new AppError(message, 400);
+  const fieldMessages = {
+    email: `The email "${value}" is already registered. Please use another email or log in.`,
+    phone: `The phone number "${value}" is already in use. Please use a different number.`,
+  };
+
+  const message =
+    fieldMessages[field] ?? `The ${field} "${value}" is already in use. Please use another value.`;
+
+  return new AppError(message, 409);
 };
 
 // Handle Invalid Fields (validation erros)
@@ -74,7 +82,7 @@ module.exports = (err, req, res, next) => {
     // Logging the error for better debugging
     console.log('ERROR LOG:', err);
 
-    let error = { ...err };
+    let error = { ...err, message: err.message };
     if (err.name === 'CastError') error = handleCastErrorDB(err);
     if (err.code === 11000) error = handleDuplicatedFieldDB(err);
     if (err.name === 'ValidationError') error = handleValidationDB(err);

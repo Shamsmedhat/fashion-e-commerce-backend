@@ -36,7 +36,7 @@ if (process.env.NODE_ENV === 'development') {
 // General browsing - Products & Categories
 const browseLimiter = rateLimit({
   max: 200,
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 5 * 60 * 1000, // 5 minutes
   message: 'Too many requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
