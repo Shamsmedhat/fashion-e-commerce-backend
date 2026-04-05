@@ -19,7 +19,9 @@ mongoose.connect(DB).then(() => console.log('DB connection successful!'));
 // Add the data
 const importData = async () => {
   try {
-    await Category.create(categoryData);
+    // ordered: true — child categories' pre('save') looks up parent by ID; default create([]) saves in parallel.
+    await Category.create(categoryData, { ordered: true });
+
     await Product.create(productData);
     console.log('Data added successfully!');
   } catch (error) {
