@@ -5,12 +5,15 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
+const bodyParser = require('body-parser');
 
 const globalErrorHandler = require('./controllers/errorController');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoute');
 const userRoutes = require('./routes/userRoute');
 const bagRoutes = require('./routes/bagRoutes');
+const checkoutRoutes = require('./routes/checkoutRoutes');
+const checkoutController = require('./controllers/checkoutController');
 
 const AppError = require('./lib/utils/appError');
 
@@ -49,6 +52,13 @@ const bagLimiter = rateLimit({
   message: 'Too many bag operations, please slow down.',
 });
 
+// Stripe webhook must use raw body parser before express.json()
+app.post(
+  '/api/v1/checkout/webhook',
+  bodyParser.raw({ type: 'application/json' }),
+  checkoutController.handleStripeWebhook,
+);
+
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
@@ -68,6 +78,7 @@ app.use('/api/v1/products', browseLimiter, productRoutes);
 app.use('/api/v1/categories', browseLimiter, categoryRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/bags', bagLimiter, bagRoutes);
+app.use('/api/v1/checkout', checkoutRoutes);
 
 //  4) ERROR Handling
 // Catch unhandled routes

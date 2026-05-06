@@ -38,11 +38,18 @@ const ordersSchema = new mongoose.Schema({
   },
 
   totalAmount: Number,
+  paymentMethod: {
+    type: String,
+    enum: ['card', 'cash'],
+    required: [true, 'Order must have a payment method!'],
+  },
   paymentStatus: {
     type: String,
     enum: ['pending', 'paid', 'failed'],
     default: 'pending',
   },
+  stripeSessionId: String,
+  paidAt: Date,
   orderStatus: {
     type: String,
     enum: ['processing', 'shipped', 'delivered', 'cancelled'],

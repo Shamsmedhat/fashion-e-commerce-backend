@@ -13,6 +13,19 @@ const siginToken = (id) => {
   });
 };
 
+const normalizeAddresses = (address, addresses = [], { treatFirstAsDefault = true } = {}) => {
+  const rawAddresses = [address, ...(Array.isArray(addresses) ? addresses : [])].filter(Boolean);
+
+  return rawAddresses
+    .filter((entry) => entry.city && entry.street)
+    .map((entry, index) => ({
+      label: entry.label || 'Home',
+      city: entry.city,
+      street: entry.street,
+      isDefault: treatFirstAsDefault && index === 0 ? true : Boolean(entry.isDefault),
+    }));
+};
+
 // Signup
 //! During development, I had a typo in .env.JWT_EXPIRES_IN, so,
 //! I noticed that the user was still being created even though there was a programming error.
@@ -23,6 +36,8 @@ exports.signup = catchAsync(async (req, res, next) => {
   session.startTransaction();
 
   try {
+    const normalizedAddresses = normalizeAddresses(req.body.address, req.body.addresses);
+
     // Create the user
     const newUser = await User.create(
       [
@@ -32,6 +47,7 @@ exports.signup = catchAsync(async (req, res, next) => {
           phone: req.body.phone,
           password: req.body.password,
           passwordConfirm: req.body.passwordConfirm,
+          ...(normalizedAddresses.length > 0 && { addresses: normalizedAddresses }),
         },
       ],
       { session },
@@ -82,6 +98,22 @@ exports.login = catchAsync(async (req, res, next) => {
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email/phone or password!', 400));
+  }
+
+  // 2b. Optional guest checkout addresses: merge onto the user profile on sign-in
+  const existingAddresses = Array.isArray(user.addresses) ? user.addresses : [];
+  const normalizedIncoming = normalizeAddresses(req.body.address, req.body.addresses, {
+    treatFirstAsDefault: existingAddresses.length === 0,
+  });
+
+  if (normalizedIncoming.length > 0) {
+    if (existingAddresses.length > 0) {
+      normalizedIncoming.forEach((addr) => {
+        addr.isDefault = false;
+      });
+    }
+    user.addresses = [...existingAddresses, ...normalizedIncoming];
+    await user.save({ validateBeforeSave: true });
   }
 
   // 3. Create the token
