@@ -1,5 +1,6 @@
 const express = require('express');
 
+const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
@@ -24,6 +25,31 @@ const app = express();
 // Trust proxy - IMPORTANT for deployment on Vercel, Heroku, etc.
 // This allows Express to trust the X-Forwarded-* headers
 app.set('trust proxy', 1);
+
+// Enable CORS for the admin dashboard and storefront frontends.
+// Origins are configurable via CORS_ORIGINS (comma-separated); sensible dev defaults otherwise.
+const allowedOrigins = (
+  process.env.CORS_ORIGINS ||
+  'http://localhost:5173,http://localhost:4173,http://localhost:3001,http://127.0.0.1:5173'
+)
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow non-browser clients (no Origin header) and any allowlisted origin.
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+// Respond to preflight (OPTIONS) requests for every route.
+app.options('*', cors(corsOptions));
 
 // Serving static files
 app.use(express.static(path.join(__dirname, 'public')));
