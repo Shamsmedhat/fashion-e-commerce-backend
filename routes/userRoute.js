@@ -1,6 +1,7 @@
 const express = require('express');
 const authController = require('./../controllers/authController');
 const bagController = require('./../controllers/bagController');
+const userController = require('./../controllers/userController');
 const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
@@ -30,6 +31,9 @@ const userLimiter = rateLimit({
 router.route('/signup').post(authLimiter, authController.signup);
 router.route('/login').post(authLimiter, authController.login);
 router.route('/logout').get(userLimiter, authController.logout);
+
+// Current authenticated user (used by the storefront to verify admin before revalidating)
+router.route('/me').get(userLimiter, authController.protect, userController.getMe);
 
 // Add to bag (requires authentication)
 // Bag route with separate limiting
