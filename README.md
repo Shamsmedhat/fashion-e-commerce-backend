@@ -48,3 +48,29 @@ After the first production deployment, create or update the Stripe webhook endpo
 
 Subscribe it to `checkout.session.completed` and `checkout.session.expired`, copy that endpoint's
 signing secret into `STRIPE_WEBHOOK_SECRET`, and send a test event before moving production traffic.
+
+### Verifying the webhook after deploying
+
+The webhook is served by `api/stripe-webhook.js`, a dedicated function that reads the request stream
+itself so Stripe signature verification always sees the exact bytes Stripe signed. Whether the
+platform leaves that stream intact can only be confirmed against a real deployment, so run this
+check after the first deploy and after any change to `vercel.json` or the API routing:
+
+1. In the Stripe Dashboard, open Developers, then Webhooks, and select the endpoint pointing at
+   `https://<production-api-domain>/api/v1/checkout/webhook`.
+2. Click "Send test webhook", choose `checkout.session.completed`, and send it.
+3. In that endpoint's delivery list, confirm the attempt shows HTTP `200`.
+
+Interpreting the result:
+
+- `200` means the raw body arrived intact and the signature verified.
+- `500` with `Webhook raw body unavailable` means the request stream was consumed before the
+  function ran. Signature verification cannot succeed in that state; the function returns an error
+  on purpose so Stripe records a failed delivery and retries rather than leaving an order silently
+  unconfirmed.
+- `400` means the body arrived but the signature did not match, which normally means
+  `STRIPE_WEBHOOK_SECRET` does not match this endpoint's signing secret.
+
+A test event only exercises signature verification, because its `metadata.orderId` does not match a
+real order. To confirm the full path, complete one real low-value card checkout and verify the
+order's `paymentStatus` becomes `paid` and the bag is emptied.
