@@ -59,6 +59,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // General browsing - Products & Categories
+// TODO(serverless): Use a shared store such as Upstash Redis for meaningful cross-instance limits.
 const browseLimiter = rateLimit({
   max: 200,
   windowMs: 5 * 60 * 1000, // 5 minutes
