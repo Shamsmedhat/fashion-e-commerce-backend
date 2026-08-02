@@ -10,15 +10,16 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-dotenv.config({ path: './config.env' });
+// config.env is used for local development; deployed environments inject variables.
+dotenv.config({ path: './config.env', quiet: true });
 const app = require('./app');
 
 const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
 
 mongoose.connect(DB).then(() => console.log('DB connection successful!'));
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-const server = app.listen(port, () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`App running on port ${port}...`);
 });
 
