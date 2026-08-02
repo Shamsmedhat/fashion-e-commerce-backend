@@ -17,3 +17,34 @@ not be sent to this API.
 
 Stored delivery URLs apply `w_1200,h_1200,c_fill,q_90,f_jpg`. Replacing an image or deleting its
 product/variant also deletes the no-longer-referenced Cloudinary asset.
+
+## Vercel production configuration
+
+Set these environment variables for the Vercel Production environment:
+
+- `NODE_ENV=production`
+- `DATABASE` — MongoDB Atlas URI; it may contain the `<PASSWORD>` placeholder
+- `DATABASE_PASSWORD`
+- `JWT_SECRET`
+- `JWT_EXPIRES_IN`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `CORS_ORIGINS` — comma-separated production storefront and admin origins
+
+Do not define `PORT` in Vercel. Local `yarn dev` continues to load `config.env`, which is gitignored.
+Preview deployment origins are not automatically trusted; add a specific preview origin to
+`CORS_ORIGINS` only when that preview needs API access.
+
+The Atlas M0 network access list must allow `0.0.0.0/0` because Vercel function egress addresses are
+not stable. Use a strong database user password and least-privilege database permissions to offset
+the broad network rule.
+
+After the first production deployment, create or update the Stripe webhook endpoint to:
+
+`https://<production-api-domain>/api/v1/checkout/webhook`
+
+Subscribe it to `checkout.session.completed` and `checkout.session.expired`, copy that endpoint's
+signing secret into `STRIPE_WEBHOOK_SECRET`, and send a test event before moving production traffic.
