@@ -2,12 +2,19 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/v1/checkout/webhook",
+      "destination": "/api/stripe-webhook"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api"
     }
   ],
   "functions": {
     "api/index.js": {
+      "maxDuration": 30
+    },
+    "api/stripe-webhook.js": {
       "maxDuration": 30
     }
   }
