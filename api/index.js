@@ -19,10 +19,7 @@ const connectDatabase = async () => {
   if (!cache.promise) {
     mongoose.set('bufferCommands', false);
 
-    const databaseUri = process.env.DATABASE.replace(
-      '<PASSWORD>',
-      process.env.DATABASE_PASSWORD,
-    );
+    const databaseUri = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
 
     cache.promise = mongoose
       .connect(databaseUri, { serverSelectionTimeoutMS: 8000 })

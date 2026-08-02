@@ -85,8 +85,8 @@ app.post(
   checkoutController.handleStripeWebhook,
 );
 
-// Body parser, reading data from body into req.body
-app.use(express.json({ limit: '10kb' }));
+// Product writes contain Cloudinary URLs only; image bytes never pass through the API.
+app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 
 // TODO: 2) Security

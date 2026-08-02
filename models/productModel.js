@@ -1,5 +1,23 @@
 const mongoose = require('mongoose');
 const Category = require('./categoryModel');
+const {
+  isOwnedCloudinaryImageUrl,
+  normalizeProductImageUrl,
+} = require('../lib/utils/cloudinaryImages');
+
+const cloudinaryImageField = (requiredMessage) => {
+  const field = {
+    type: String,
+    set: normalizeProductImageUrl,
+    validate: {
+      validator: isOwnedCloudinaryImageUrl,
+      message: 'Product images must belong to the configured Cloudinary account.',
+    },
+  };
+
+  if (requiredMessage) field.required = [true, requiredMessage];
+  return field;
+};
 
 const variantSchema = new mongoose.Schema(
   {
@@ -37,7 +55,7 @@ const variantSchema = new mongoose.Schema(
       required: [true, 'Product must have a stock, noting the default is one!'],
       default: 1,
     },
-    images: [{ type: String, required: [true, 'Product must have at least one image!'] }],
+    images: [cloudinaryImageField('Product must have at least one image!')],
   },
   {
     id: false,
@@ -72,8 +90,8 @@ const productSchema = new mongoose.Schema(
       ref: 'Category',
       required: [true, 'Please provide the product category!'],
     },
-    coverImage: { type: String, required: [true, 'Product must have a cover image'] },
-    images: [String],
+    coverImage: cloudinaryImageField('Product must have a cover image'),
+    images: [cloudinaryImageField()],
     variants: [variantSchema],
 
     // TODO: make it average calc

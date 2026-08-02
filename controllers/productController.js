@@ -5,90 +5,46 @@ const ALLOWED_VARIANTS_FIELDS = require('./../lib/constants/allowedVariantsField
 const catchAsync = require('./../lib/utils/catchAsync');
 const AppError = require('./../lib/utils/appError');
 const APIFeatures = require('./../lib/utils/apiFeatures');
-const multer = require('multer');
-const sharp = require('sharp');
-const cloudinary = require('cloudinary').v2;
-const streamifier = require('streamifier');
+const {
+  createUploadSignature,
+  destroyProductImages,
+  getPublicIds,
+} = require('./../lib/utils/cloudinaryImages');
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const getProductImageUrls = (product) => {
+  if (!product) return [];
 
-const uploadToCloudinary = (buffer) => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: 'products',
-        resource_type: 'image',
-        transformation: [{ quality: 'auto' }, { fetch_format: 'auto' }],
-        public_id: `product-${Date.now()}`,
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      },
-    );
-    streamifier.createReadStream(buffer).pipe(uploadStream);
+  return [
+    product.coverImage,
+    ...(product.images || []),
+    ...(product.variants || []).flatMap((variant) => variant.images || []),
+  ].filter(Boolean);
+};
+
+const destroyImagesNoLongerReferenced = async (candidateUrls, product) => {
+  const retainedPublicIds = new Set(getPublicIds(getProductImageUrls(product)));
+  const removedUrls = candidateUrls.filter((imageUrl) => {
+    const [publicId] = getPublicIds([imageUrl]);
+    return publicId && !retainedPublicIds.has(publicId);
+  });
+
+  await destroyProductImages(removedUrls);
+};
+
+exports.getUploadSignature = (req, res, next) => {
+  if (
+    !process.env.CLOUDINARY_CLOUD_NAME ||
+    !process.env.CLOUDINARY_API_KEY ||
+    !process.env.CLOUDINARY_API_SECRET
+  ) {
+    return next(new AppError('Cloudinary uploads are not configured.', 500));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: createUploadSignature(),
   });
 };
-
-const multerStorage = multer.memoryStorage();
-
-const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image')) {
-    cb(null, true);
-  } else {
-    cb(new AppError('Not an image! Please upload only images'), false);
-  }
-};
-
-const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
-
-exports.uploadProductImages = upload.fields([
-  { name: 'coverImage', maxCount: 1 },
-  {
-    name: 'images',
-    maxCount: 3,
-  },
-]);
-
-exports.resizeProductImage = catchAsync(async (req, res, next) => {
-  if (!req.files) return next();
-
-  // 1) Process Cover Image
-  if (req.files.coverImage && req.files.coverImage[0]) {
-    const resizedBuffer = await sharp(req.files.coverImage[0].buffer)
-      .resize(1200, 1200)
-      .toFormat('jpeg')
-      .jpeg({ quality: 90 })
-      .toBuffer();
-
-    const result = await uploadToCloudinary(resizedBuffer);
-    req.body.coverImage = result.secure_url; // Full URL
-  }
-
-  // 2) Process Multiple Images
-  if (req.files.images && req.files.images.length > 0) {
-    req.body.images = [];
-
-    await Promise.all(
-      req.files.images.map(async (file) => {
-        const resizedBuffer = await sharp(file.buffer)
-          .resize(1200, 1200)
-          .toFormat('jpeg')
-          .jpeg({ quality: 90 })
-          .toBuffer();
-
-        const result = await uploadToCloudinary(resizedBuffer);
-        req.body.images.push(result.secure_url);
-      }),
-    );
-  }
-
-  next();
-});
 
 // Get Top 6 products Selling (Alias)
 exports.aliasBestSelling = (req, res, next) => {
@@ -142,9 +98,7 @@ exports.createProduct = catchAsync(async (req, res, next) => {
     name: req.body.name,
     description: req.body.description,
     categoryId: req.body.categoryId,
-    // Set by resizeProductImage middleware
     coverImage: req.body.coverImage,
-    // Set by resizeProductImage middleware
     images: req.body.images || [],
     variants: newVariants,
   };
@@ -394,16 +348,22 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('No valid product fields provided to update', 400));
   }
 
+  const existingProduct = await Product.findById(req.params.id);
+  if (!existingProduct) {
+    return next(new AppError('No product found with this ID', 404));
+  }
+
+  const replacedImageUrls = [];
+  if (updateData.coverImage !== undefined) replacedImageUrls.push(existingProduct.coverImage);
+  if (updateData.images !== undefined) replacedImageUrls.push(...existingProduct.images);
+
   // Update
   const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
     new: true,
     runValidators: true,
   });
 
-  // If there is no product found
-  if (!product) {
-    return next(new AppError('No product found with this ID', 404));
-  }
+  await destroyImagesNoLongerReferenced(replacedImageUrls, product);
 
   // Res
   res.status(200).json({
@@ -419,6 +379,8 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
   if (!product) {
     return next(new AppError('No product found with this ID', 404));
   }
+
+  await destroyProductImages(getProductImageUrls(product));
 
   res.status(204).json({
     status: 'success',
@@ -493,6 +455,11 @@ exports.updateProductVariant = catchAsync(async (req, res, next) => {
     return next(new AppError('No valid product fields provided to update', 400));
   }
 
+  const existingProduct = await Product.findById(req.params.id);
+  const existingVariant = existingProduct?.variants.id(req.params.varId);
+  const replacedImageUrls =
+    req.body.images !== undefined && existingVariant ? [...existingVariant.images] : [];
+
   // Update
   const product = await Product.findOneAndUpdate(
     { _id: req.params.id, 'variants._id': req.params.varId },
@@ -508,6 +475,8 @@ exports.updateProductVariant = catchAsync(async (req, res, next) => {
     return next(new AppError('No product found with this ID', 404));
   }
 
+  await destroyImagesNoLongerReferenced(replacedImageUrls, product);
+
   // Res
   res.status(200).json({
     status: 'success',
@@ -517,6 +486,10 @@ exports.updateProductVariant = catchAsync(async (req, res, next) => {
 
 // Delete Product Variant
 exports.deleteProductVariant = catchAsync(async (req, res, next) => {
+  const existingProduct = await Product.findById(req.params.id);
+  const removedVariant = existingProduct?.variants.id(req.params.varId);
+  const removedImageUrls = removedVariant ? [...removedVariant.images] : [];
+
   // Update (Delete variant)
   // TODO: Make an isActive property for the variant
   const product = await Product.findOneAndUpdate(
@@ -534,6 +507,8 @@ exports.deleteProductVariant = catchAsync(async (req, res, next) => {
   if (!product) {
     return next(new AppError('No product variant found with this ID', 404));
   }
+
+  await destroyImagesNoLongerReferenced(removedImageUrls, product);
 
   // Res
   res.status(204).json({

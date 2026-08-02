@@ -12,6 +12,13 @@ router
 // Alias: Top Rating 6 products
 router.route('/top-rating').get(productController.aliasTopRating, productController.getAllProducts);
 
+router.get(
+  '/upload-signature',
+  authController.protect,
+  authController.restrictTo('admin'),
+  productController.getUploadSignature,
+);
+
 //? Product
 // GET/Create Products
 router
@@ -20,8 +27,6 @@ router
   .post(
     authController.protect,
     authController.restrictTo('admin'),
-    productController.uploadProductImages,
-    productController.resizeProductImage,
     productController.createProduct,
   );
 
@@ -41,8 +46,6 @@ router
   .patch(
     authController.protect,
     authController.restrictTo('admin'),
-    productController.uploadProductImages,
-    productController.resizeProductImage,
     productController.updateProduct,
   );
 
