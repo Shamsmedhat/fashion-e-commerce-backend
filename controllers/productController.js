@@ -7,7 +7,7 @@ const AppError = require('./../lib/utils/appError');
 const APIFeatures = require('./../lib/utils/apiFeatures');
 const {
   createUploadSignature,
-  destroyProductImages,
+  destroyPublicIds,
   getPublicIds,
 } = require('./../lib/utils/cloudinaryImages');
 
@@ -21,14 +21,51 @@ const getProductImageUrls = (product) => {
   ].filter(Boolean);
 };
 
-const destroyImagesNoLongerReferenced = async (candidateUrls, product) => {
-  const retainedPublicIds = new Set(getPublicIds(getProductImageUrls(product)));
-  const removedUrls = candidateUrls.filter((imageUrl) => {
-    const [publicId] = getPublicIds([imageUrl]);
-    return publicId && !retainedPublicIds.has(publicId);
-  });
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  await destroyProductImages(removedUrls);
+// The same Cloudinary asset can be referenced by more than one product, and a stored URL may use
+// either the legacy or the current transformation prefix, so assets are matched by public id.
+const findPublicIdsReferencedElsewhere = async (publicIds, excludeProductId) => {
+  const patterns = publicIds.map(
+    (publicId) => new RegExp(`/${escapeRegExp(publicId)}\\.[A-Za-z0-9]+$`),
+  );
+
+  const filter = {
+    $or: [
+      { coverImage: { $in: patterns } },
+      { images: { $in: patterns } },
+      { 'variants.images': { $in: patterns } },
+    ],
+  };
+  if (excludeProductId) filter._id = { $ne: excludeProductId };
+
+  const others = await Product.find(filter).select('coverImage images variants.images').lean();
+  return new Set(getPublicIds(others.flatMap(getProductImageUrls)));
+};
+
+// Deletes only assets that no product still points at. If the reference check itself fails we keep
+// the asset: leaking a file costs quota, but deleting a shared one breaks the live storefront.
+const destroyUnreferencedImages = async (candidateUrls, retainingProduct, excludeProductId) => {
+  const retainedPublicIds = new Set(getPublicIds(getProductImageUrls(retainingProduct)));
+  const candidatePublicIds = getPublicIds(candidateUrls).filter(
+    (publicId) => !retainedPublicIds.has(publicId),
+  );
+
+  if (!candidatePublicIds.length) return;
+
+  try {
+    const referencedElsewhere = await findPublicIdsReferencedElsewhere(
+      candidatePublicIds,
+      excludeProductId,
+    );
+
+    await destroyPublicIds(
+      candidatePublicIds.filter((publicId) => !referencedElsewhere.has(publicId)),
+    );
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Skipped Cloudinary cleanup, reference check failed: ${error.message}`);
+  }
 };
 
 exports.getUploadSignature = (req, res, next) => {
@@ -363,7 +400,7 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     runValidators: true,
   });
 
-  await destroyImagesNoLongerReferenced(replacedImageUrls, product);
+  await destroyUnreferencedImages(replacedImageUrls, product, product._id);
 
   // Res
   res.status(200).json({
@@ -380,7 +417,7 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('No product found with this ID', 404));
   }
 
-  await destroyProductImages(getProductImageUrls(product));
+  await destroyUnreferencedImages(getProductImageUrls(product), null, product._id);
 
   res.status(204).json({
     status: 'success',
@@ -475,7 +512,7 @@ exports.updateProductVariant = catchAsync(async (req, res, next) => {
     return next(new AppError('No product found with this ID', 404));
   }
 
-  await destroyImagesNoLongerReferenced(replacedImageUrls, product);
+  await destroyUnreferencedImages(replacedImageUrls, product, product._id);
 
   // Res
   res.status(200).json({
@@ -508,7 +545,7 @@ exports.deleteProductVariant = catchAsync(async (req, res, next) => {
     return next(new AppError('No product variant found with this ID', 404));
   }
 
-  await destroyImagesNoLongerReferenced(removedImageUrls, product);
+  await destroyUnreferencedImages(removedImageUrls, product, product._id);
 
   // Res
   res.status(204).json({
