@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
@@ -50,9 +49,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 // Respond to preflight (OPTIONS) requests for every route.
 app.options('*', cors(corsOptions));
-
-// Serving static files
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Set security HTTP headers
 app.use(helmet());
