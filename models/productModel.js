@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 const Category = require('./categoryModel');
 const {
+  InvalidProductImageError,
   isOwnedCloudinaryImageUrl,
   normalizeProductImageUrl,
+  normalizeUpdateImageValues,
 } = require('../lib/utils/cloudinaryImages');
 
 const cloudinaryImageField = (requiredMessage) => {
@@ -185,6 +187,37 @@ productSchema.pre('findOneAndUpdate', async function () {
 
   newVariant.sku = `${parentCategoryName}-${categoryName}-${color}-${newVariant.size}-${number}-${uniqueNum}`;
 });
+
+// Guard image URLs on every update entry point. Mongoose update validators do not run reliably for
+// positional operators, so this inspects the update document itself instead of relying on them.
+const guardUpdateImages = function () {
+  const update = this.getUpdate();
+  if (!update) return;
+
+  try {
+    this.setUpdate(normalizeUpdateImageValues(update));
+  } catch (error) {
+    if (!(error instanceof InvalidProductImageError)) throw error;
+
+    const validationError = new mongoose.Error.ValidationError();
+    validationError.addError(
+      'images',
+      new mongoose.Error.ValidatorError({
+        path: 'images',
+        message: error.message,
+        value: error.value,
+        type: 'user defined',
+      }),
+    );
+    throw validationError;
+  }
+};
+
+productSchema.pre(
+  ['findOneAndUpdate', 'findOneAndReplace', 'updateOne', 'updateMany', 'replaceOne'],
+  { query: true, document: false },
+  guardUpdateImages,
+);
 
 // Delete isActive from the res
 productSchema.set('toJSON', {
