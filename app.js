@@ -29,7 +29,14 @@ app.set('trust proxy', 1);
 // Origins are configurable via CORS_ORIGINS (comma-separated); sensible dev defaults otherwise.
 const allowedOrigins = (
   process.env.CORS_ORIGINS ||
-  'http://localhost:5173,http://localhost:4173,http://localhost:3001,http://127.0.0.1:5173'
+  [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'http://localhost:3001',
+    'http://127.0.0.1:5173',
+    'https://fashion-ecommerce-dashboard.vercel.app',
+    'https://fashion-e-commerce-frontend-pi.vercel.app',
+  ].join(',')
 )
   .split(',')
   .map((origin) => origin.trim())
