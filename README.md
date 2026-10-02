@@ -1,4 +1,152 @@
-# fashion-e-commerce
+# Fashion E-Commerce API
+
+[![CI](https://github.com/Shamsmedhat/fashion-e-commerce-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/Shamsmedhat/fashion-e-commerce-backend/actions/workflows/ci.yml)
+
+REST API for a fashion store: catalogue, shopping bag, checkout (cash and Stripe card payments)
+and JWT authentication. It serves two clients:
+
+| Client                                                                        | What it is                       |
+| ----------------------------------------------------------------------------- | -------------------------------- |
+| [Storefront](https://github.com/Shamsmedhat/fashion-e-commerce-frontend)      | Next.js shop — browse, bag, pay  |
+| [Admin dashboard](https://github.com/Shamsmedhat/fashion-ecommerce-dashboard) | React CMS — products, categories |
+
+**Live:** `https://fashion-ecommerce-backend-teal.vercel.app/api/v1`
+
+## Stack
+
+Node.js · Express 4 · MongoDB (Mongoose 9) · JWT · Stripe · Cloudinary · deployed on Vercel
+
+## Run it locally
+
+The quickest way needs no database and no accounts. It starts the API on a throwaway in-memory
+MongoDB, seeded with the demo catalogue and two users:
+
+```bash
+yarn install
+yarn dev:memory        # http://localhost:3000/api/v1
+```
+
+| Account | Phone         | Password      |
+| ------- | ------------- | ------------- |
+| Admin   | `01111803604` | `Shams@123`   |
+| Shopper | `01000000001` | `Shopper@123` |
+
+To run against a real MongoDB, Cloudinary and Stripe instead:
+
+```bash
+cp config.env.example config.env    # fill in the values
+yarn dev
+```
+
+## Scripts
+
+| Command            | What it does                                                             |
+| ------------------ | ------------------------------------------------------------------------ |
+| `yarn dev`         | API with reload, using `config.env`                                      |
+| `yarn dev:memory`  | API on a seeded in-memory database (nothing real is touched)             |
+| `yarn test`        | Unit and integration tests                                               |
+| `yarn lint`        | ESLint + Prettier check                                                  |
+| `yarn add:data`    | Import the demo catalogue into the configured database                   |
+| `yarn reset:data`  | Delete all products and categories, then import the demo catalogue again |
+| `yarn delete:data` | Delete all products and categories                                       |
+
+The demo catalogue in `data/` is a snapshot of the live shop (same ids, SKUs and image URLs), so
+`yarn reset:data` restores the shop after the demo data has been changed.
+
+## API
+
+All routes are under `/api/v1`. Send `Authorization: Bearer <token>` on protected routes.
+
+| Method   | Route                           | Access | Purpose                                          |
+| -------- | ------------------------------- | ------ | ------------------------------------------------ |
+| `POST`   | `/users/signup`                 | public | Create an account                                |
+| `POST`   | `/users/login`                  | public | Log in with email or phone                       |
+| `GET`    | `/users/me`                     | user   | The logged-in user                               |
+| `POST`   | `/users/me/addresses`           | user   | Save a delivery address                          |
+| `GET`    | `/products`                     | public | List products (filter, sort, paginate)           |
+| `GET`    | `/products/best-selling`        | public | Top 6 by units sold                              |
+| `GET`    | `/products/top-rating`          | public | Top 6 by rating                                  |
+| `GET`    | `/products/:id`                 | public | One product                                      |
+| `POST`   | `/products`                     | admin  | Create a product                                 |
+| `PATCH`  | `/products/:id`                 | admin  | Update name, description, category or images     |
+| `DELETE` | `/products/:id`                 | admin  | Delete a product and its unused images           |
+| `GET`    | `/products/upload-signature`    | admin  | Signature for a direct Cloudinary upload         |
+| `GET`    | `/products/:id/variants`        | public | A product's variants                             |
+| `POST`   | `/products/:id/variants`        | admin  | Add a variant                                    |
+| `PATCH`  | `/products/:id/variants/:varId` | admin  | Edit a variant (`null` clears an optional field) |
+| `DELETE` | `/products/:id/variants/:varId` | admin  | Delete a variant (not the last one)              |
+| `GET`    | `/categories`                   | public | List categories                                  |
+| `GET`    | `/categories/main`              | public | Main categories only                             |
+| `GET`    | `/categories/children/:id`      | public | Subcategories of a category                      |
+| `GET`    | `/categories/:id`               | public | One category                                     |
+| `POST`   | `/categories`                   | admin  | Create a category                                |
+| `PATCH`  | `/categories/:id`               | admin  | Rename or move a category                        |
+| `DELETE` | `/categories/:id`               | admin  | Delete a category that is no longer used         |
+| `POST`   | `/users/bag/add`                | user   | Add an item to the bag                           |
+| `GET`    | `/bags/me`                      | user   | The bag                                          |
+| `GET`    | `/bags/me/items`                | user   | Bag items with product details and totals        |
+| `PATCH`  | `/bags/me/items/:itemId`        | user   | Change quantity or variant                       |
+| `DELETE` | `/bags/me/items/:itemId`        | user   | Remove an item                                   |
+| `DELETE` | `/bags/me`                      | user   | Empty the bag                                    |
+| `POST`   | `/checkout/cash`                | user   | Place a cash-on-delivery order                   |
+| `POST`   | `/checkout/card-session`        | user   | Start a Stripe Checkout session                  |
+| `POST`   | `/checkout/webhook`             | Stripe | Payment confirmation                             |
+
+### Lists
+
+`GET /products` and `GET /categories` accept:
+
+- `page` and `limit` — positive integers; `limit` is capped at 100 and defaults to 10.
+- `sort` — comma-separated fields, `-` for descending, e.g. `sort=-createdAt`.
+- `fields` — comma-separated fields to return.
+- Filters on an allowlist of fields, as equality (`categoryId=…`), a list (`slug=a&slug=b`) or a
+  range (`variants.price[gte]=500`). **Any other parameter is ignored**, so tracking parameters
+  never change a result, and no query operator can be injected.
+- Products only: `mainCategory=<id>` (a category and its subcategories) and variant filters
+  `variants.color`, `variants.size`, `variants.price`, `variants.stock` (repeat or comma-separate
+  for "any of").
+
+`total` in the response is the number of matches, not the size of the page.
+
+### Errors
+
+Every error has the same shape:
+
+```json
+{ "status": "fail", "message": "Human-readable reason" }
+```
+
+`400` invalid input · `401` missing, invalid or expired token · `403` not allowed · `404` not
+found · `409` conflict (duplicate value, category still in use, item out of stock) · `429` rate
+limited · `500` unexpected (details are logged, never returned).
+
+### Things worth knowing
+
+- **Variants are referenced by SKU** from bags and orders, so a SKU never changes once assigned.
+- **Stock** is taken when an order is placed (cash) or paid (card), atomically and inside a
+  transaction; two shoppers cannot both buy the last unit. A card payment that finds the stock
+  gone is still recorded as paid and flagged `needsReview`.
+- **Categories** form a tree. Renaming or moving one rewrites the `path` and `slug` of its
+  subcategories in the same transaction. A category with subcategories or products cannot be
+  deleted.
+- **Rate limits** are kept in memory, so on serverless hosting each instance counts separately.
+
+## Tests
+
+```bash
+yarn test
+```
+
+- **Integration tests** (`test/api.*.test.js`) send real HTTP requests to the Express app, backed
+  by an in-memory MongoDB replica set (a replica set because checkout, sign-up and category
+  updates use transactions). They cover authentication, the catalogue lists, product and variant
+  editing, the category tree, the bag, checkout stock handling and the Stripe webhook.
+- **Unit tests** cover the Cloudinary image guard and the error handler.
+
+The first run downloads a MongoDB binary (about 100 MB) into the local cache.
+
+`scripts/smoke-live.sh` runs read-only checks against the three live deployments; run it after a
+deploy.
 
 ## Product image uploads
 
@@ -63,7 +211,8 @@ check after the first deploy and after any change to `vercel.json` or the API ro
 
 Interpreting the result:
 
-- `200` means the raw body arrived intact and the signature verified.
+- `200` means the raw body arrived intact and the signature verified. A test event is not about
+  one of this shop's orders, so it is acknowledged and ignored (`"ignored": true` in the response).
 - `500` with `Webhook raw body unavailable` means the request stream was consumed before the
   function ran. Signature verification cannot succeed in that state; the function returns an error
   on purpose so Stripe records a failed delivery and retries rather than leaving an order silently
@@ -71,6 +220,6 @@ Interpreting the result:
 - `400` means the body arrived but the signature did not match, which normally means
   `STRIPE_WEBHOOK_SECRET` does not match this endpoint's signing secret.
 
-A test event only exercises signature verification, because its `metadata.orderId` does not match a
-real order. To confirm the full path, complete one real low-value card checkout and verify the
-order's `paymentStatus` becomes `paid` and the bag is emptied.
+A test event only exercises signature verification. To confirm the full path, complete one real
+low-value card checkout and verify the order's `paymentStatus` becomes `paid`, the stock goes down
+and the bag is emptied.

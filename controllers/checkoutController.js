@@ -245,12 +245,11 @@ exports.handleStripeWebhook = catchAsync(async (req, res, next) => {
     const stripeSession = event.data.object;
     const orderId = stripeSession.metadata?.orderId;
 
-    if (!orderId) {
-      return next(new AppError('Missing orderId in Stripe session metadata.', 400));
-    }
-
-    if (!(await Orders.exists({ _id: orderId }))) {
-      return next(new AppError('Order not found for webhook event.', 404));
+    // Not one of our orders (for example a test event sent from the Stripe dashboard).
+    // It is acknowledged: a failure status would only make Stripe retry an event that can
+    // never be processed.
+    if (!mongoose.isValidObjectId(orderId) || !(await Orders.exists({ _id: orderId }))) {
+      return res.status(200).json({ received: true, ignored: true });
     }
 
     const session = await mongoose.startSession();
@@ -288,7 +287,7 @@ exports.handleStripeWebhook = catchAsync(async (req, res, next) => {
 
   if (event.type === 'checkout.session.expired') {
     const orderId = event.data.object.metadata?.orderId;
-    if (orderId) {
+    if (mongoose.isValidObjectId(orderId)) {
       // Only an unpaid order can expire.
       await Orders.updateOne(
         { _id: orderId, paymentStatus: 'pending' },

@@ -246,6 +246,18 @@ test('an expired session fails a pending order but never a paid one', async () =
   assert.equal((await Orders.findById(paid._id)).paymentStatus, 'paid');
 });
 
+test('an event that is not about one of our orders is acknowledged and ignored', async () => {
+  const noOrderId = await sendWebhook('checkout.session.completed', undefined);
+  const unknownOrder = await sendWebhook('checkout.session.completed', '64f0000000000000000000ff');
+  const malformedId = await sendWebhook('checkout.session.expired', 'not-an-id');
+
+  for (const res of [noOrderId, unknownOrder, malformedId]) {
+    assert.equal(res.status, 200);
+  }
+  assert.equal(noOrderId.body.ignored, true);
+  assert.equal(await Orders.countDocuments(), 0);
+});
+
 test('a webhook with a bad signature is rejected', async () => {
   const res = await h
     .api()

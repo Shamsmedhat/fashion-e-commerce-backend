@@ -47,7 +47,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "repository": "https://github.com/Shamsmedhat/fashion-e-commerce.git",
+  "repository": "https://github.com/Shamsmedhat/fashion-e-commerce-backend.git",
   "author": "Shams <shamsmedhat1@gmail.com>",
   "license": "MIT"
 }
