@@ -3,6 +3,9 @@ const AppError = require('./../lib/utils/appError');
 const Product = require('./../models/productModel');
 const Bag = require('./../models/bagModel');
 
+// JSON can carry "2", 1.5 or -1; only whole numbers from 1 up are a valid quantity.
+const isValidQuantity = (value) => Number.isInteger(value) && value >= 1;
+
 // Get user's bag
 exports.getMyBag = catchAsync(async (req, res, next) => {
   let bag = await Bag.findOne({ userId: req.user._id });
@@ -139,12 +142,17 @@ exports.addToBag = catchAsync(async (req, res, next) => {
   const { productId, variantSku, quantity = 1 } = req.body;
 
   // Validation
-  if (!productId || !variantSku) {
+  if (
+    typeof productId !== 'string' ||
+    typeof variantSku !== 'string' ||
+    !productId ||
+    !variantSku
+  ) {
     return next(new AppError('Please provide productId and variantSku!', 400));
   }
 
-  if (quantity < 1) {
-    return next(new AppError('Quantity must be at least 1!', 400));
+  if (!isValidQuantity(quantity)) {
+    return next(new AppError('Quantity must be a whole number of at least 1!', 400));
   }
 
   // Check if product exists
@@ -229,8 +237,12 @@ exports.updateBagItem = catchAsync(async (req, res, next) => {
     return next(new AppError('Please provide quantity or variantSku to update!', 400));
   }
 
-  if (quantity !== undefined && quantity < 1) {
-    return next(new AppError('Quantity must be at least 1!', 400));
+  if (variantSku !== undefined && typeof variantSku !== 'string') {
+    return next(new AppError('variantSku must be text!', 400));
+  }
+
+  if (quantity !== undefined && !isValidQuantity(quantity)) {
+    return next(new AppError('Quantity must be a whole number of at least 1!', 400));
   }
 
   // Find bag

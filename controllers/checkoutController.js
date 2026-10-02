@@ -1,4 +1,5 @@
 const Stripe = require('stripe');
+const mongoose = require('mongoose');
 
 const catchAsync = require('./../lib/utils/catchAsync');
 const AppError = require('./../lib/utils/appError');
@@ -91,6 +92,42 @@ const buildCheckoutSnapshot = async (userId) => {
   };
 };
 
+// Takes the ordered quantities out of stock and counts them as sold. The stock condition is part
+// of the update filter, so two checkouts racing for the last unit cannot both succeed.
+// Returns the order lines that could not be fulfilled.
+const decrementStock = async (items, session) => {
+  const unfulfilled = [];
+
+  // Sequential on purpose: a transaction session cannot run operations in parallel.
+  for (const item of items) {
+    const result = await Product.updateOne(
+      {
+        _id: item.productId,
+        variants: { $elemMatch: { sku: item.variantSku, stock: { $gte: item.quantity } } },
+      },
+      {
+        $inc: {
+          'variants.$.stock': -item.quantity,
+          'variants.$.soldCount': item.quantity,
+        },
+      },
+      { session },
+    );
+
+    if (result.modifiedCount === 0) unfulfilled.push(item);
+  }
+
+  return unfulfilled;
+};
+
+const isHttpUrl = (value) => {
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+};
+
 exports.createCardCheckoutSession = catchAsync(async (req, res, next) => {
   if (!stripe) {
     return next(new AppError('Stripe is not configured. Please set STRIPE_SECRET_KEY.', 500));
@@ -98,8 +135,8 @@ exports.createCardCheckoutSession = catchAsync(async (req, res, next) => {
 
   const { successUrl, cancelUrl } = req.body;
 
-  if (!successUrl || !cancelUrl) {
-    return next(new AppError('Please provide successUrl and cancelUrl.', 400));
+  if (!isHttpUrl(successUrl) || !isHttpUrl(cancelUrl)) {
+    return next(new AppError('Please provide a valid successUrl and cancelUrl.', 400));
   }
 
   const snapshot = await buildCheckoutSnapshot(req.user._id);
@@ -141,25 +178,50 @@ exports.createCardCheckoutSession = catchAsync(async (req, res, next) => {
 exports.createCashOrder = catchAsync(async (req, res, next) => {
   const snapshot = await buildCheckoutSnapshot(req.user._id);
 
-  const order = await Orders.create({
-    userId: req.user._id,
-    items: snapshot.orderItems,
-    addressSnapshot: snapshot.addressSnapshot,
-    totalAmount: snapshot.totalAmount,
-    paymentMethod: 'cash',
-    paymentStatus: 'pending',
-  });
+  const session = await mongoose.startSession();
 
-  snapshot.bag.items = [];
-  await snapshot.bag.save();
+  try {
+    let order;
 
-  res.status(201).json({
-    status: 'success',
-    message: 'Cash order created successfully.',
-    data: {
-      order,
-    },
-  });
+    // Stock, order and bag change together: a failure in any step leaves all three untouched.
+    await session.withTransaction(async () => {
+      const unfulfilled = await decrementStock(snapshot.orderItems, session);
+
+      if (unfulfilled.length) {
+        throw new AppError(
+          `"${unfulfilled[0].productName}" just went out of stock. Please review your bag.`,
+          409,
+        );
+      }
+
+      [order] = await Orders.create(
+        [
+          {
+            userId: req.user._id,
+            items: snapshot.orderItems,
+            addressSnapshot: snapshot.addressSnapshot,
+            totalAmount: snapshot.totalAmount,
+            paymentMethod: 'cash',
+            paymentStatus: 'pending',
+          },
+        ],
+        { session },
+      );
+
+      snapshot.bag.items = [];
+      await snapshot.bag.save({ session });
+    });
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Cash order created successfully.',
+      data: {
+        order,
+      },
+    });
+  } finally {
+    await session.endSession();
+  }
 });
 
 exports.handleStripeWebhook = catchAsync(async (req, res, next) => {
@@ -180,40 +242,58 @@ exports.handleStripeWebhook = catchAsync(async (req, res, next) => {
   }
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const orderId = session.metadata?.orderId;
+    const stripeSession = event.data.object;
+    const orderId = stripeSession.metadata?.orderId;
 
     if (!orderId) {
       return next(new AppError('Missing orderId in Stripe session metadata.', 400));
     }
 
-    const order = await Orders.findById(orderId);
-    if (!order) {
+    if (!(await Orders.exists({ _id: orderId }))) {
       return next(new AppError('Order not found for webhook event.', 404));
     }
 
-    // Idempotency guard for duplicate webhook deliveries.
-    if (order.paymentStatus !== 'paid') {
-      order.paymentStatus = 'paid';
-      order.paidAt = Date.now();
-      order.stripeSessionId = session.id;
-      await order.save();
+    const session = await mongoose.startSession();
 
-      const bag = await Bag.findOne({ userId: order.userId });
-      if (bag && bag.items.length) {
-        bag.items = [];
-        await bag.save();
-      }
+    try {
+      await session.withTransaction(async () => {
+        // Idempotency guard for duplicate webhook deliveries: only the delivery that flips the
+        // order to "paid" goes on to touch the stock and the bag.
+        const order = await Orders.findOneAndUpdate(
+          { _id: orderId, paymentStatus: { $ne: 'paid' } },
+          { paymentStatus: 'paid', paidAt: new Date(), stripeSessionId: stripeSession.id },
+          { returnDocument: 'after', session },
+        );
+
+        if (!order) return;
+
+        // The customer has already paid, so a shortfall cannot reject the order;
+        // it is flagged for a manual refund or restock instead.
+        const unfulfilled = await decrementStock(order.items, session);
+        if (unfulfilled.length) {
+          order.needsReview = true;
+          await order.save({ session });
+        }
+
+        const bag = await Bag.findOne({ userId: order.userId }).session(session);
+        if (bag && bag.items.length) {
+          bag.items = [];
+          await bag.save({ session });
+        }
+      });
+    } finally {
+      await session.endSession();
     }
   }
 
   if (event.type === 'checkout.session.expired') {
-    const session = event.data.object;
-    const orderId = session.metadata?.orderId;
+    const orderId = event.data.object.metadata?.orderId;
     if (orderId) {
-      await Orders.findByIdAndUpdate(orderId, {
-        paymentStatus: 'failed',
-      });
+      // Only an unpaid order can expire.
+      await Orders.updateOne(
+        { _id: orderId, paymentStatus: 'pending' },
+        { paymentStatus: 'failed' },
+      );
     }
   }
 

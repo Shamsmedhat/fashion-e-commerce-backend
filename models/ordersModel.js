@@ -50,6 +50,11 @@ const ordersSchema = new mongoose.Schema({
   },
   stripeSessionId: String,
   paidAt: Date,
+  // Set when a card payment was confirmed but the stock had already run out.
+  needsReview: {
+    type: Boolean,
+    default: false,
+  },
   orderStatus: {
     type: String,
     enum: ['processing', 'shipped', 'delivered', 'cancelled'],
@@ -57,7 +62,7 @@ const ordersSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
