@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const AppError = require('../lib/utils/appError');
 
 const categorySchema = new mongoose.Schema({
   name: {
@@ -19,24 +20,29 @@ const categorySchema = new mongoose.Schema({
     ref: 'Category',
     default: null,
   },
-  isActive: { type: Boolean, select: false, default: true },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // Create slug, path
 categorySchema.pre('save', async function () {
-  if (!this.parentId) {
-    this.slug = this.name.toLowerCase().trim();
-    this.path = this.name.toLowerCase().trim();
-  } else {
-    const parentCategory = await Category.findById(this.parentId);
+  const name = this.name.toLowerCase().trim();
 
-    this.slug = `${parentCategory.name.toLowerCase().trim()}-${this.name.toLowerCase().trim()}`;
-    this.path = `${parentCategory.path}/${this.name.toLowerCase().trim()}`;
+  if (!this.parentId) {
+    this.slug = name;
+    this.path = name;
+    return;
   }
+
+  const parentCategory = await Category.findById(this.parentId).session(this.$session());
+  if (!parentCategory) throw new AppError('Parent category not found!', 400);
+
+  this.slug = `${parentCategory.slug}-${name}`;
+  this.path = `${parentCategory.path}/${name}`;
 });
 
 // Update the category name in all docs
@@ -45,39 +51,48 @@ categorySchema.pre('save', async function () {
 //? Code logic is in the Controller
 categorySchema.pre('findOneAndUpdate', async function () {
   const update = this.getUpdate();
-  const query = this.getQuery();
 
   // Skip delete
   if (!update) return;
 
+  // Every query below joins the caller's transaction, so the cascade commits or rolls back with it.
+  const { session } = this.getOptions();
+
   // Get the category from the param
-  const category = await this.model.findOne(query);
+  const category = await this.model.findOne(this.getQuery()).session(session);
   if (!category) return;
 
   // Check if name change
-  const isNameChanged = update.name && update.name !== category.name;
+  const isNameChanged = update.name !== undefined && update.name !== category.name;
 
-  // Check if parentId change
+  // Check if parentId change (null moves the category to the top level)
+  const hasParentUpdate = Object.prototype.hasOwnProperty.call(update, 'parentId');
+  const newParentId = hasParentUpdate ? update.parentId : category.parentId;
   const isParentChanged =
-    update.parentId && category.parentId?.toString() !== update.parentId.toString();
+    hasParentUpdate && String(newParentId || '') !== String(category.parentId || '');
 
   // Nothing changed
   if (!isNameChanged && !isParentChanged) return;
 
   // Final category name
-  const finalName = isNameChanged ? update.name : category.name;
-  const finalNameLower = finalName.toLowerCase();
+  const finalNameLower = (isNameChanged ? update.name : category.name).toLowerCase().trim();
 
   // Determine parent
   let parentCategory = null;
 
-  if (isParentChanged) {
-    parentCategory = await this.model.findById(update.parentId);
-    if (!parentCategory) {
-      throw new Error('New parent category not found');
+  if (newParentId) {
+    parentCategory = await this.model.findById(newParentId).session(session);
+    if (!parentCategory) throw new AppError('Parent category not found!', 400);
+
+    // Moving a category below itself would detach the whole branch from the tree.
+    const isSelf = parentCategory._id.equals(category._id);
+    const isDescendant = parentCategory.path.startsWith(`${category.path}/`);
+    if (isSelf || isDescendant) {
+      throw new AppError(
+        'A category cannot be moved under itself or one of its subcategories!',
+        400,
+      );
     }
-  } else if (category.parentId) {
-    parentCategory = await this.model.findById(category.parentId);
   }
 
   // Build new slug & path
@@ -95,7 +110,7 @@ categorySchema.pre('findOneAndUpdate', async function () {
     const oldSlug = category.slug;
 
     await this.model.updateMany(
-      { path: { $regex: `^${oldPath}/` } },
+      { path: { $regex: `^${escapeRegExp(oldPath)}/` } },
       [
         {
           $set: {
@@ -116,7 +131,7 @@ categorySchema.pre('findOneAndUpdate', async function () {
           },
         },
       ],
-      { updatePipeline: true },
+      { updatePipeline: true, session },
     );
   }
 });
