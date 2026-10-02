@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "start:prod": "cross-env NODE_ENV=production nodemon server.js",
     "lint": "eslint",
+    "pretest": "node test-support/ensure-mongodb-binary.js",
     "test": "node --test",
     "add:data": "node import-initial-data --import",
     "delete:data": "node import-initial-data --delete"
