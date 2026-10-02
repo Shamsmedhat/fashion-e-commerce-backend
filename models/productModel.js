@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const Category = require('./categoryModel');
 const {
@@ -38,15 +39,10 @@ const variantSchema = new mongoose.Schema(
       required: [true, 'Product must have a price!'],
       min: [100, 'Minmum product price must be more than or equal 100 EGP!'],
     },
+    // Compared against the price in the pre('validate') hook below.
     priceDiscount: {
       type: Number,
-      validate: {
-        validator: function (val) {
-          // this only points to current doc on NEW document creation
-          return val < this.price;
-        },
-        message: 'Discount price ({VALUE}) should ve below regular price!',
-      },
+      min: [0, 'Discount price cannot be negative!'],
     },
     soldCount: {
       type: Number,
@@ -55,6 +51,7 @@ const variantSchema = new mongoose.Schema(
     stock: {
       type: Number,
       required: [true, 'Product must have a stock, noting the default is one!'],
+      min: [0, 'Stock cannot be negative!'],
       default: 1,
     },
     images: [cloudinaryImageField('Product must have at least one image!')],
@@ -65,6 +62,22 @@ const variantSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+
+// A field validator only sees the value being set, so changing the price alone would never
+// re-check the discount. Validating the pair here covers creating and editing a variant alike.
+variantSchema.pre('validate', function () {
+  if (this.priceDiscount == null || this.priceDiscount < this.price) return;
+
+  // Reported on the field that changed: a save that validates modified paths only
+  // would otherwise drop an error attached to the untouched one.
+  const changedPath = this.isNew || this.isModified('priceDiscount') ? 'priceDiscount' : 'price';
+
+  this.invalidate(
+    changedPath,
+    `Discount price (${this.priceDiscount}) should be below regular price (${this.price})!`,
+    this[changedPath],
+  );
+});
 
 const productSchema = new mongoose.Schema(
   {
@@ -109,7 +122,7 @@ const productSchema = new mongoose.Schema(
     },
     createdAt: {
       type: Date,
-      default: Date.now(),
+      default: Date.now,
     },
   },
   {
@@ -129,63 +142,53 @@ productSchema.virtual('variantsNum').get(function () {
   return this.variants.length;
 });
 
-// Create the SKU when i add a new product
+// "men/shoes" -> "MEN-SHO". A main category has a single segment, so it works there too.
+const skuPrefix = (category) =>
+  (category.path || category.name)
+    .split('/')
+    .map((segment) => segment.slice(0, 3).toUpperCase())
+    .join('-');
+
+const randomSkuSuffix = () => String(crypto.randomInt(0, 10000)).padStart(4, '0');
+
+// Create the SKU for every new variant (new product, or a variant added to an existing one).
+// A variant that already has a SKU keeps it: bags and orders reference variants by SKU.
 productSchema.pre('save', async function () {
-  // Make sure data is exist
-  if (!this.isModified('variants') && !this.isModified('categoryId')) return;
-  if (!this.categoryId) return;
+  if (this.variants.every((variant) => variant.sku)) return;
 
-  // Get category with parent data
-  const category = await Category.findById(this.categoryId).populate('parentId');
+  const category = await Category.findById(this.categoryId);
 
-  // Check for data
-  if (!category || !category.parentId) {
-    throw new Error('Category or parent category not found');
+  if (!category) {
+    const validationError = new mongoose.Error.ValidationError();
+    validationError.addError(
+      'categoryId',
+      new mongoose.Error.ValidatorError({
+        path: 'categoryId',
+        message: 'No category found with this ID!',
+        value: this.categoryId,
+        type: 'user defined',
+      }),
+    );
+    throw validationError;
   }
 
-  // Define the SKU units
-  const categoryName = category.name.slice(0, 3).toUpperCase();
-  const parentCategoryName = category.parentId.name.slice(0, 3).toUpperCase();
+  const prefix = skuPrefix(category);
+  const usedSkus = new Set(this.variants.map((variant) => variant.sku).filter(Boolean));
 
-  // Create SKU
   this.variants.forEach((variant, i) => {
-    const color = variant.color.slice(0, 3).toUpperCase();
+    if (variant.sku) return;
+
+    const color = (variant.color || 'non').slice(0, 3).toUpperCase();
     const number = String(i + 1).padStart(3, '0');
-    const uniqueNum = Date.now().toString().slice(-4);
 
-    variant.sku = `${parentCategoryName}-${categoryName}-${color}-${variant.size}-${number}-${uniqueNum}`;
+    let sku;
+    do {
+      sku = `${prefix}-${color}-${variant.size}-${number}-${randomSkuSuffix()}`;
+    } while (usedSkus.has(sku));
+
+    usedSkus.add(sku);
+    variant.sku = sku;
   });
-});
-
-// Create the SKU when i add a new variant
-productSchema.pre('findOneAndUpdate', async function () {
-  // New Data , Query
-  const update = this.getUpdate();
-  const query = this.getQuery();
-
-  // 'variants._id' exists when i want to delete the variant so Skip delete variant
-  //! Skip delete variant
-  if (query['variants._id'] !== undefined) return;
-  if (!update.$push?.variants) return;
-
-  // Get category with parent data
-  const product = await this.model.findById(query._id).populate('categoryId');
-
-  // Check for data
-  if (!product || !product.categoryId) {
-    throw new Error('Product not found');
-  }
-  // Define the SKU units
-  const categoryName = product.categoryId.name.slice(0, 3).toUpperCase();
-  const parentCategoryName = product.categoryId.slug.split('-')[0].slice(0, 3).toUpperCase();
-
-  // Create SKU
-  const newVariant = update.$push.variants;
-  const color = newVariant.color ? newVariant.color.slice(0, 3).toUpperCase() : 'NON';
-  const number = String(product.variants.length + 1).padStart(3, '0');
-  const uniqueNum = Date.now().toString().slice(-4);
-
-  newVariant.sku = `${parentCategoryName}-${categoryName}-${color}-${newVariant.size}-${number}-${uniqueNum}`;
 });
 
 // Guard image URLs on every update entry point. Mongoose update validators do not run reliably for
@@ -218,14 +221,6 @@ productSchema.pre(
   { query: true, document: false },
   guardUpdateImages,
 );
-
-// Delete isActive from the res
-productSchema.set('toJSON', {
-  transform(doc, ret) {
-    delete ret.isActive;
-    return ret;
-  },
-});
 
 const Product = mongoose.model('Product', productSchema);
 module.exports = Product;

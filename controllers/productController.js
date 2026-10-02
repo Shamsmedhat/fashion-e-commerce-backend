@@ -1,4 +1,3 @@
-const url = require('url');
 const Product = require('./../models/productModel');
 const Category = require('./../models/categoryModel');
 const ALLOWED_VARIANTS_FIELDS = require('./../lib/constants/allowedVariantsFields');
@@ -97,37 +96,83 @@ exports.aliasTopRating = (req, res, next) => {
   next();
 };
 
+// Variant fields a client may filter the catalogue by, with how their values are stored.
+const VARIANT_FILTERS = {
+  color: (value) => value.toLowerCase(),
+  size: (value) => value.toUpperCase(),
+  price: Number,
+  stock: Number,
+  priceDiscount: Number,
+};
+
+const FILTERABLE_FIELDS = [
+  'name',
+  'categoryId',
+  'ratingsAverage',
+  'reviewCount',
+  'createdAt',
+  'variants.price',
+  'variants.stock',
+];
+
+const SORTABLE_FIELDS = [
+  'name',
+  'createdAt',
+  'ratingsAverage',
+  'reviewCount',
+  'variants.price',
+  'variants.stock',
+  'variants.soldCount',
+];
+
+// Keep only the variant fields a client is allowed to write.
+const pickVariantFields = (source) => {
+  const variant = {};
+
+  ALLOWED_VARIANTS_FIELDS.forEach((field) => {
+    if (source[field] !== undefined) variant[field] = source[field];
+  });
+
+  return variant;
+};
+
+// Reads the variants.<field> filters. Repeated keys (variants.color=white&variants.color=black)
+// and comma-separated values both mean "any of these", so the raw query string is parsed here:
+// Express collapses repeated keys differently depending on how many there are.
+const parseVariantFilters = (req) => {
+  const [, queryString = ''] = (req.originalUrl || req.url || '').split('?');
+  const params = new URLSearchParams(queryString);
+  const filters = {};
+
+  Object.entries(VARIANT_FILTERS).forEach(([field, normalize]) => {
+    const values = params
+      .getAll(`variants.${field}`)
+      .flatMap((value) => value.split(','))
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .map(normalize);
+
+    if (!values.length) return;
+
+    if (values.some((value) => Number.isNaN(value))) {
+      throw new AppError(`Filter "variants.${field}" must be a number.`, 400);
+    }
+
+    filters[field] = values.length === 1 ? values[0] : { $in: values };
+  });
+
+  return filters;
+};
+
+const variantMatchesFilters = (variant, filters) =>
+  Object.entries(filters).every(([field, expected]) =>
+    expected.$in ? expected.$in.includes(variant[field]) : expected === variant[field],
+  );
+
 // Create Product
 exports.createProduct = catchAsync(async (req, res, next) => {
-  // Parse variants if it's a JSON string (from form-data)
-  if (typeof req.body.variants === 'string') {
-    try {
-      req.body.variants = JSON.parse(req.body.variants);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.log(err);
-      return next(new AppError('Invalid variants format. Must be valid JSON.', 400));
-    }
-  }
-
-  // New variant
-  let newVariants = [];
-
-  if (Array.isArray(req.body.variants) && req.body.variants.length > 0) {
-    newVariants = req.body.variants.map((variant) => {
-      const filteredVariant = {};
-
-      // Allowed variant fields
-      ALLOWED_VARIANTS_FIELDS.forEach((el) => {
-        if (variant[el] !== undefined) {
-          filteredVariant[el] = variant[el];
-        }
-      });
-
-      return filteredVariant;
-    });
-  } else {
-    return next(new AppError('Variants must be an array!', 400));
+  if (!Array.isArray(req.body.variants) || req.body.variants.length === 0) {
+    return next(new AppError('Variants must be a non-empty array!', 400));
   }
 
   // Build product data
@@ -137,7 +182,7 @@ exports.createProduct = catchAsync(async (req, res, next) => {
     categoryId: req.body.categoryId,
     coverImage: req.body.coverImage,
     images: req.body.images || [],
-    variants: newVariants,
+    variants: req.body.variants.map((variant) => pickVariantFields(variant || {})),
   };
 
   const product = await Product.create(productData);
@@ -153,189 +198,51 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 
 // Get All Products
 exports.getAllProducts = catchAsync(async (req, res, next) => {
-  // Get The total number of documents (products)
-  const numOfProducts = await Product.countDocuments();
+  const filter = {};
 
-  // Handle mainCategory filter
-  let filter = {};
+  // Handle mainCategory filter: the category itself plus its direct subcategories
+  if (req.query.mainCategory !== undefined) {
+    if (typeof req.query.mainCategory !== 'string') {
+      return next(new AppError('Invalid filter for "mainCategory".', 400));
+    }
 
-  if (req.query.mainCategory) {
-    // Get all subcategory IDs under the main category
     const categories = await Category.find({
       $or: [{ _id: req.query.mainCategory }, { parentId: req.query.mainCategory }],
     }).select('_id');
 
-    const categoryIds = categories.map((cat) => cat._id);
-    filter.categoryId = { $in: categoryIds };
-
-    // Removeing mainCategory from query string so it doesn't interfere with APIFeatures
-    delete req.query.mainCategory;
+    filter.categoryId = { $in: categories.map((cat) => cat._id) };
   }
 
-  // Extract variant filters from query (e.g., variants.color, variants.size)
-  const variantFilters = {};
+  // Use $elemMatch to find products where at least one variant matches ALL the variant filters
+  const variantFilters = parseVariantFilters(req);
+  const hasVariantFilters = Object.keys(variantFilters).length > 0;
 
-  // Parse raw query string to handle duplicate keys (e.g., variants.color=white&variants.color=black)
-  // Manually parse to collect all values for duplicate keys
-  const parsedUrl = url.parse(req.originalUrl || req.url, false);
-  const rawQueryParams = {};
-
-  // Get the raw query string (part after ?)
-  const queryStringPart = parsedUrl.query || '';
-
-  if (queryStringPart) {
-    queryStringPart.split('&').forEach((param) => {
-      const equalIndex = param.indexOf('=');
-      if (equalIndex !== -1) {
-        const key = decodeURIComponent(param.substring(0, equalIndex));
-        const value = decodeURIComponent(param.substring(equalIndex + 1));
-        if (key && key.startsWith('variants.')) {
-          if (!rawQueryParams[key]) {
-            rawQueryParams[key] = [];
-          }
-          rawQueryParams[key].push(value || '');
-        }
-      }
-    });
-  }
-
-  // Process variant filters from parsed params
-  Object.keys(rawQueryParams).forEach((key) => {
-    const variantField = key.replace('variants.', '');
-    // Check if it's a valid variant field
-    if (ALLOWED_VARIANTS_FIELDS.includes(variantField)) {
-      let value = rawQueryParams[key];
-
-      // If only one value, convert to single value (unless it's comma-separated)
-      if (value.length === 1 && typeof value[0] === 'string' && !value[0].includes(',')) {
-        value = value[0];
-      } else if (value.length === 1 && typeof value[0] === 'string' && value[0].includes(',')) {
-        // Handle comma-separated single value
-        value = value[0].split(',').map((v) => v.trim());
-      }
-      // Otherwise, value is already an array with multiple values
-
-      // Convert to proper type (string fields: lowercase, numeric fields: convert to number)
-      if (variantField === 'color' || variantField === 'size') {
-        // String fields - lowercase them
-        if (Array.isArray(value)) {
-          variantFilters[variantField] = { $in: value.map((v) => v.toLowerCase()) };
-        } else {
-          variantFilters[variantField] = value.toLowerCase();
-        }
-      } else {
-        // Numeric fields (price, stock, priceDiscount) - convert to numbers
-        if (Array.isArray(value)) {
-          variantFilters[variantField] = { $in: value.map((v) => Number(v)) };
-        } else {
-          variantFilters[variantField] = Number(value);
-        }
-      }
-      // Remove from query so it doesn't interfere with APIFeatures
-      delete req.query[key];
-    }
-  });
-
-  // Also check req.query for variant filters that might have been parsed by Express
-  // (handles cases where Express might have parsed them differently)
-  Object.keys(req.query)
-    .filter((key) => key.startsWith('variants.') && !rawQueryParams[key])
-    .forEach((key) => {
-      const variantField = key.replace('variants.', '');
-      if (ALLOWED_VARIANTS_FIELDS.includes(variantField)) {
-        let value = req.query[key];
-
-        // Handle multiple values: arrays or comma-separated strings
-        if (!Array.isArray(value) && typeof value === 'string' && value.includes(',')) {
-          value = value.split(',').map((v) => v.trim());
-        } else if (!Array.isArray(value)) {
-          value = [value];
-        }
-
-        // Convert to proper type
-        if (variantField === 'color' || variantField === 'size') {
-          if (value.length === 1) {
-            variantFilters[variantField] = value[0].toLowerCase();
-          } else {
-            variantFilters[variantField] = { $in: value.map((v) => v.toLowerCase()) };
-          }
-        } else {
-          if (value.length === 1) {
-            variantFilters[variantField] = Number(value[0]);
-          } else {
-            variantFilters[variantField] = { $in: value.map((v) => Number(v)) };
-          }
-        }
-        delete req.query[key];
-      }
-    });
-
-  // Build variant filter query for MongoDB
-  // Use $elemMatch to find products where at least one variant matches ALL the filters
-  if (Object.keys(variantFilters).length > 0) {
-    const mongoVariantFilter = {};
-    Object.keys(variantFilters).forEach((field) => {
-      mongoVariantFilter[field] = variantFilters[field];
-    });
-    filter['variants'] = { $elemMatch: mongoVariantFilter };
-  }
+  if (hasVariantFilters) filter.variants = { $elemMatch: variantFilters };
 
   // 1) Build the query
-  const features = new APIFeatures(Product.find(filter), req.query)
+  const features = new APIFeatures(Product.find(filter), req.query, {
+    filterableFields: FILTERABLE_FIELDS,
+    sortableFields: SORTABLE_FIELDS,
+  })
     .filter()
     .sort()
-    .limitFields()
-    .paginate();
+    .limitFields();
+
+  // Total counts every product matching the filters, not just the current page
+  const numOfProducts = await Product.countDocuments(features.query.getFilter());
 
   // 2) Excute the query
   // Excute the query after finishing the build
-  const products = await features.query;
+  const products = await features.paginate().query;
 
   // 3) Filter variants in each product to only include matching variants
-  if (Object.keys(variantFilters).length > 0) {
+  if (hasVariantFilters) {
     products.forEach((product) => {
-      product.variants = product.variants.filter((variant) => {
-        return Object.keys(variantFilters).every((field) => {
-          const filterValue = variantFilters[field];
-          const variantValue = variant[field];
-
-          if (filterValue && typeof filterValue === 'object' && filterValue.$in) {
-            // Handle array of values (e.g., { $in: ['white', 'black'] } or { $in: [100, 200] })
-            if (field === 'color' || field === 'size') {
-              // String fields - lowercase for comparison
-              return filterValue.$in.includes(
-                typeof variantValue === 'string' ? variantValue.toLowerCase() : variantValue,
-              );
-            } else {
-              // Numeric fields - compare as numbers
-              return filterValue.$in.includes(
-                typeof variantValue === 'number' ? variantValue : Number(variantValue),
-              );
-            }
-          } else {
-            // Handle single value
-            if (field === 'color' || field === 'size') {
-              // String fields - lowercase for comparison
-              const normalizedFilterValue =
-                typeof filterValue === 'string' ? filterValue.toLowerCase() : filterValue;
-              const normalizedVariantValue =
-                typeof variantValue === 'string' ? variantValue.toLowerCase() : variantValue;
-              return normalizedFilterValue === normalizedVariantValue;
-            } else {
-              // Numeric fields - compare as numbers
-              const normalizedFilterValue =
-                typeof filterValue === 'number' ? filterValue : Number(filterValue);
-              const normalizedVariantValue =
-                typeof variantValue === 'number' ? variantValue : Number(variantValue);
-              return normalizedFilterValue === normalizedVariantValue;
-            }
-          }
-        });
-      });
+      product.variants = product.variants.filter((variant) =>
+        variantMatchesFilters(variant, variantFilters),
+      );
     });
   }
-
-  // After getting products, add image URLs
 
   // 4) Res
   res.status(200).json({
@@ -390,13 +297,20 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('No product found with this ID', 404));
   }
 
+  if (
+    updateData.categoryId !== undefined &&
+    !(await Category.exists({ _id: updateData.categoryId }))
+  ) {
+    return next(new AppError('No category found with this ID!', 400));
+  }
+
   const replacedImageUrls = [];
   if (updateData.coverImage !== undefined) replacedImageUrls.push(existingProduct.coverImage);
   if (updateData.images !== undefined) replacedImageUrls.push(...existingProduct.images);
 
   // Update
   const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 
@@ -426,34 +340,26 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
 });
 
 //? Variants
+// Variants are edited through the loaded document (not an update operator) so the schema
+// validators run with the real variant: a discount is always checked against its price,
+// and the SKU hook only fills in SKUs that are missing.
+
 // Create Product Variant
 exports.createProductVariant = catchAsync(async (req, res, next) => {
-  // New data
-  let newVariant = {};
-
-  // Allowed variant fields
-  ALLOWED_VARIANTS_FIELDS.forEach((el) => {
-    if (req.body[el] !== undefined) {
-      newVariant[el] = req.body[el];
-    }
-  });
-
-  // Update product with new variant
-  const product = await Product.findByIdAndUpdate(
-    req.params.id,
-    { $push: { variants: newVariant } },
-    { new: true, runValidators: true },
-  );
+  const product = await Product.findById(req.params.id);
 
   // If there is no product found
   if (!product) {
     return next(new AppError('No product found with this ID', 404));
   }
 
+  product.variants.push(pickVariantFields(req.body));
+  await product.save({ validateModifiedOnly: true });
+
   // Res
   res.status(201).json({
     status: 'success',
-    data: product,
+    data: { product },
   });
 });
 
@@ -478,39 +384,29 @@ exports.getProductVariants = catchAsync(async (req, res, next) => {
 // Update Product Variant
 exports.updateProductVariant = catchAsync(async (req, res, next) => {
   // Store new Data
-  const newVariant = {};
-
-  // Allowed variant fields
-  ALLOWED_VARIANTS_FIELDS.forEach((field) => {
-    if (req.body[field] !== undefined) {
-      newVariant[`variants.$.${field}`] = req.body[field];
-    }
-  });
+  const newVariant = pickVariantFields(req.body);
 
   // If empty updated data
   if (!Object.keys(newVariant).length) {
     return next(new AppError('No valid product fields provided to update', 400));
   }
 
-  const existingProduct = await Product.findById(req.params.id);
-  const existingVariant = existingProduct?.variants.id(req.params.varId);
-  const replacedImageUrls =
-    req.body.images !== undefined && existingVariant ? [...existingVariant.images] : [];
-
-  // Update
-  const product = await Product.findOneAndUpdate(
-    { _id: req.params.id, 'variants._id': req.params.varId },
-    { $set: newVariant },
-    {
-      new: true,
-      runValidators: true,
-    },
-  );
+  const product = await Product.findById(req.params.id);
+  const variant = product?.variants.id(req.params.varId);
 
   // If there is no product found
-  if (!product) {
+  if (!variant) {
     return next(new AppError('No product found with this ID', 404));
   }
+
+  const replacedImageUrls = newVariant.images !== undefined ? [...variant.images] : [];
+
+  // null clears an optional field (e.g. removing a discount)
+  Object.entries(newVariant).forEach(([field, value]) => {
+    variant[field] = value === null ? undefined : value;
+  });
+
+  await product.save({ validateModifiedOnly: true });
 
   await destroyUnreferencedImages(replacedImageUrls, product, product._id);
 
@@ -525,22 +421,33 @@ exports.updateProductVariant = catchAsync(async (req, res, next) => {
 exports.deleteProductVariant = catchAsync(async (req, res, next) => {
   const existingProduct = await Product.findById(req.params.id);
   const removedVariant = existingProduct?.variants.id(req.params.varId);
-  const removedImageUrls = removedVariant ? [...removedVariant.images] : [];
+
+  // If there is no product found
+  if (!removedVariant) {
+    return next(new AppError('No product variant found with this ID', 404));
+  }
+
+  // A product without variants has no price or stock, so it could never be sold.
+  if (existingProduct.variants.length === 1) {
+    return next(new AppError('A product must keep at least one variant!', 400));
+  }
+
+  const removedImageUrls = [...removedVariant.images];
 
   // Update (Delete variant)
-  // TODO: Make an isActive property for the variant
+  // The filter repeats the "more than one variant" check so two concurrent deletes cannot empty it.
   const product = await Product.findOneAndUpdate(
     {
       _id: req.params.id,
       'variants._id': req.params.varId,
+      'variants.1': { $exists: true },
     },
     {
       $pull: { variants: { _id: req.params.varId } },
     },
-    { new: true, runValidators: true },
+    { returnDocument: 'after' },
   );
 
-  // If there is no product found
   if (!product) {
     return next(new AppError('No product variant found with this ID', 404));
   }
