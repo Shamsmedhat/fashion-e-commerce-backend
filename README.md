@@ -129,7 +129,10 @@ limited · `500` unexpected (details are logged, never returned).
 - **Categories** form a tree. Renaming or moving one rewrites the `path` and `slug` of its
   subcategories in the same transaction. A category with subcategories or products cannot be
   deleted.
-- **Rate limits** are kept in memory, so on serverless hosting each instance counts separately.
+- **Rate limits** are counted per account on authenticated routes and per account being tried
+  on login, not per IP alone: the storefront calls the API from its own servers, so all shoppers
+  share a few addresses. Counters are kept in memory, so on serverless hosting each instance
+  counts separately.
 
 ## Tests
 

@@ -15,7 +15,7 @@ const checkoutRoutes = require('./routes/checkoutRoutes');
 const checkoutController = require('./controllers/checkoutController');
 
 const AppError = require('./lib/utils/appError');
-const { browseLimiter, bagLimiter } = require('./lib/utils/rateLimiters');
+const { browseLimiter } = require('./lib/utils/rateLimiters');
 
 const app = express();
 
@@ -80,7 +80,7 @@ app.use(cookieParser());
 app.use('/api/v1/products', browseLimiter, productRoutes);
 app.use('/api/v1/categories', browseLimiter, categoryRoutes);
 app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/bags', bagLimiter, bagRoutes);
+app.use('/api/v1/bags', bagRoutes);
 app.use('/api/v1/checkout', checkoutRoutes);
 
 //  3) ERROR Handling

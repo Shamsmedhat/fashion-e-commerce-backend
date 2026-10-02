@@ -12,15 +12,15 @@ router.route('/login').post(authLimiter, authController.login);
 router.route('/logout').get(userLimiter, authController.logout);
 
 // Current authenticated user (used by the storefront to verify admin before revalidating)
-router.route('/me').get(userLimiter, authController.protect, userController.getMe);
+router.route('/me').get(authController.protect, userLimiter, userController.getMe);
 
 // Delivery addresses of the authenticated user
 router
   .route('/me/addresses')
-  .post(userLimiter, authController.protect, userController.addMyAddress);
+  .post(authController.protect, userLimiter, userController.addMyAddress);
 
 // Add to bag (requires authentication)
-// Bag route with separate limiting
-router.route('/bag/add').post(bagLimiter, authController.protect, bagController.addToBag);
+// Authenticated routes run `protect` first so their limits are counted per account
+router.route('/bag/add').post(authController.protect, bagLimiter, bagController.addToBag);
 
 module.exports = router;

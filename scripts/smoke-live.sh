@@ -31,6 +31,7 @@ check "unknown query params do not empty the product list" "$(json "$API_URL/pro
 check "product total reflects the filters" "$(json "$API_URL/products?variants.color=black&limit=100" 'd.total===d.results')" true
 check "size filter matches stored sizes" "$(json "$API_URL/products?variants.size=M" 'd.results>0')" true
 check "invalid page is a 400" "$(status "$API_URL/products?page=-1")" 400
+check "a malformed query string is not a server error" "$(status "$API_URL/products?variants.color=%E0%A4%A")" 200
 check "invalid id is a 400" "$(status "$API_URL/products/not-an-id")" 400
 check "garbage token is a 401" "$(status -H 'Authorization: Bearer null' "$API_URL/bags/me")" 401
 check "wrong credentials are a 401" "$(status -X POST -H 'Content-Type: application/json' -d '{"email":"smoke@example.com","password":"Wrong@123"}' "$API_URL/users/login")" 401

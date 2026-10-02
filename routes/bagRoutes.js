@@ -1,11 +1,12 @@
 const express = require('express');
 const bagController = require('./../controllers/bagController');
 const authController = require('./../controllers/authController');
+const { bagLimiter } = require('./../lib/utils/rateLimiters');
 
 const router = express.Router();
 
-// All bag routes require authentication
-router.use(authController.protect);
+// All bag routes require authentication; the limit is counted per account
+router.use(authController.protect, bagLimiter);
 
 // Get user's bag
 router.route('/me').get(bagController.getMyBag);
