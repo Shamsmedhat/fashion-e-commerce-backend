@@ -1,390 +1,612 @@
 [
   {
+    "_id": "69d2d429bf4c97848a949bc9",
     "name": "Men Classic Leather Sneakers",
     "description": "Comfortable leather sneakers suitable for everyday casual wear.",
     "categoryId": "64f000000000000000000004",
-    "coverImage": "men-sneakers.jpg",
-    "images": ["men-sneakers-1.jpg", "men-sneakers-2.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436672/products/product-1775436671375.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436673/products/product-1775436673157.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436674/products/product-1775436673199.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436674/products/product-1775436673182.jpg"
+    ],
+    "ratingsAverage": 4.5,
+    "reviewCount": 23,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "MEN-SHOE-001",
+        "_id": "69d2d429bf4c97848a949bca",
+        "sku": "MEN-SHO-BLA-M-001-3696",
         "size": "M",
-        "color": "Black",
+        "color": "black",
         "price": 1200,
         "priceDiscount": 999,
-        "stock": 15,
+        "stock": 20,
         "soldCount": 8,
-        "images": ["men-shoe-black-1.jpg", "men-shoe-black-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436729/products/product-1775436728424.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436729/products/product-1775436728439.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436729/products/product-1775436728436.jpg"
+        ]
       },
       {
-        "sku": "MEN-SHOE-002",
+        "_id": "69d2d429bf4c97848a949bcb",
+        "sku": "MEN-SHO-WHI-L-002-3696",
         "size": "L",
-        "color": "White",
+        "color": "white",
         "price": 1250,
         "stock": 10,
         "soldCount": 5,
-        "images": ["men-shoe-white-1.jpg", "men-shoe-white-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436749/products/product-1775436748690.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436749/products/product-1775436748691.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436749/products/product-1775436748686.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.5,
-    "reviewCount": 23
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bcc",
     "name": "Men Slim Fit Jeans",
     "description": "High quality slim fit jeans made from durable denim fabric.",
     "categoryId": "64f000000000000000000006",
-    "coverImage": "men-jeans.jpg",
-    "images": ["men-jeans-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436436/products/product-1775436435063.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436437/products/product-1775436437108.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436438/products/product-1775436437136.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436437/products/product-1775436437121.jpg"
+    ],
+    "ratingsAverage": 4.2,
+    "reviewCount": 17,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "MEN-BTM-001",
+        "_id": "69d2d429bf4c97848a949bcd",
+        "sku": "MEN-BOT-BLU-M-001-3674",
         "size": "M",
-        "color": "Blue",
+        "color": "blue",
         "price": 850,
         "stock": 20,
         "soldCount": 12,
-        "images": ["men-jeans-blue-1.jpg", "men-jeans-blue-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436468/products/product-1775436467789.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436468/products/product-1775436467793.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436468/products/product-1775436467786.jpg"
+        ]
       },
       {
-        "sku": "MEN-BTM-002",
+        "_id": "69d2d429bf4c97848a949bce",
+        "sku": "MEN-BOT-BLA-L-002-3674",
         "size": "L",
-        "color": "Black",
+        "color": "black",
         "price": 900,
         "stock": 14,
         "soldCount": 9,
-        "images": ["men-jeans-black-1.jpg", "men-jeans-black-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436494/products/product-1775436493566.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436494/products/product-1775436493580.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436494/products/product-1775436493571.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.2,
-    "reviewCount": 17
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bcf",
     "name": "Men Cotton Hoodie",
     "description": "Soft cotton hoodie designed for comfort and warmth.",
     "categoryId": "64f000000000000000000007",
-    "coverImage": "men-hoodie.jpg",
-    "images": ["men-hoodie-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436560/products/product-1775436559405.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436561/products/product-1775436561302.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436562/products/product-1775436561314.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436562/products/product-1775436561311.jpg"
+    ],
+    "ratingsAverage": 4.6,
+    "reviewCount": 34,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "MEN-UP-001",
+        "_id": "69d2d429bf4c97848a949bd0",
+        "sku": "MEN-UPP-GRE-M-001-3657",
         "size": "M",
-        "color": "Grey",
+        "color": "grey",
         "price": 950,
         "stock": 12,
         "soldCount": 20,
-        "images": ["men-hoodie-grey-1.jpg", "men-hoodie-grey-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436599/products/product-1775436598942.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436599/products/product-1775436598945.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436599/products/product-1775436598938.jpg"
+        ]
       },
       {
-        "sku": "MEN-UP-002",
+        "_id": "69d2d429bf4c97848a949bd1",
+        "sku": "MEN-UPP-BLA-L-002-3657",
         "size": "L",
-        "color": "Black",
+        "color": "black",
         "price": 980,
         "stock": 9,
         "soldCount": 14,
-        "images": ["men-hoodie-black-1.jpg", "men-hoodie-black-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436618/products/product-1775436617555.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436618/products/product-1775436617564.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436618/products/product-1775436617568.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.6,
-    "reviewCount": 34
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bd2",
     "name": "Men Leather Belt",
     "description": "Genuine leather belt perfect for formal and casual outfits.",
     "categoryId": "64f000000000000000000005",
-    "coverImage": "men-belt.jpg",
-    "images": ["men-belt-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437768/products/product-1775437767998.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437770/products/product-1775437769910.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437770/products/product-1775437769922.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437770/products/product-1775437769918.jpg"
+    ],
+    "ratingsAverage": 4.3,
+    "reviewCount": 11,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "MEN-ACC-001",
+        "_id": "69d2d429bf4c97848a949bd3",
+        "sku": "MEN-ACC-BRO-M-001-4049",
         "size": "M",
-        "color": "Brown",
+        "color": "brown",
         "price": 400,
         "stock": 25,
         "soldCount": 18,
-        "images": ["men-belt-brown-1.jpg", "men-belt-brown-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437800/products/product-1775437799630.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437800/products/product-1775437799620.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437801/products/product-1775437799627.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.3,
-    "reviewCount": 11
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bd4",
     "name": "Men Formal Shirt",
     "description": "Elegant formal shirt for office and events.",
     "categoryId": "64f000000000000000000007",
-    "coverImage": "men-shirt.jpg",
-    "images": ["men-shirt-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437578/products/product-1775437577715.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437580/products/product-1775437580482.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437581/products/product-1775437580488.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437581/products/product-1775437580491.jpg"
+    ],
+    "ratingsAverage": 4.4,
+    "reviewCount": 16,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "MEN-UP-003",
+        "_id": "69d2d429bf4c97848a949bd5",
+        "sku": "MEN-UPP-WHI-M-001-4029",
         "size": "M",
-        "color": "White",
+        "color": "white",
         "price": 700,
         "stock": 18,
         "soldCount": 10,
-        "images": ["men-shirt-white-1.jpg", "men-shirt-white-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437623/products/product-1775437623269.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437624/products/product-1775437623242.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437624/products/product-1775437623258.jpg"
+        ]
       },
       {
-        "sku": "MEN-UP-004",
+        "_id": "69d2d429bf4c97848a949bd6",
+        "sku": "MEN-UPP-BLU-L-002-4029",
         "size": "L",
-        "color": "Blue",
+        "color": "blue",
         "price": 720,
         "stock": 14,
         "soldCount": 8,
-        "images": ["men-shirt-blue-1.jpg", "men-shirt-blue-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437707/products/product-1775437706699.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437707/products/product-1775437706630.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.4,
-    "reviewCount": 16
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bd7",
     "name": "Women Running Sneakers",
     "description": "Lightweight running sneakers designed for daily workouts.",
     "categoryId": "64f000000000000000000008",
-    "coverImage": "women-sneakers.jpg",
-    "images": ["women-sneakers-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436306/products/product-1775436305838.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436307/products/product-1775436307525.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436308/products/product-1775436307534.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436308/products/product-1775436307539.jpg"
+    ],
+    "ratingsAverage": 4.7,
+    "reviewCount": 41,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "WMN-SHOE-001",
+        "_id": "69d2d429bf4c97848a949bd8",
+        "sku": "WOM-SHO-PIN-M-001-3722",
         "size": "M",
-        "color": "Pink",
+        "color": "pink",
         "price": 1100,
         "priceDiscount": 950,
         "stock": 18,
         "soldCount": 25,
-        "images": ["women-shoe-pink-1.jpg", "women-shoe-pink-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436341/products/product-1775436340760.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436341/products/product-1775436340796.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436341/products/product-1775436340801.jpg"
+        ]
       },
       {
-        "sku": "WMN-SHOE-002",
+        "_id": "69d2d429bf4c97848a949bd9",
+        "sku": "WOM-SHO-BLA-L-002-3722",
         "size": "L",
-        "color": "Black",
+        "color": "black",
         "price": 1150,
         "stock": 12,
         "soldCount": 17,
-        "images": ["women-shoe-black-1.jpg", "women-shoe-black-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436364/products/product-1775436363549.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436364/products/product-1775436363554.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436364/products/product-1775436363539.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.7,
-    "reviewCount": 41
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bda",
     "name": "Women High Waist Jeans",
     "description": "Stylish high waist jeans with a modern flattering fit.",
     "categoryId": "64f000000000000000000010",
-    "coverImage": "women-jeans.jpg",
-    "images": ["women-jeans-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435938/products/product-1775435937708.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435940/products/product-1775435939958.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435940/products/product-1775435939962.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435940/products/product-1775435939965.jpg"
+    ],
+    "ratingsAverage": 4.4,
+    "reviewCount": 29,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "WMN-BTM-001",
+        "_id": "69d2d429bf4c97848a949bdb",
+        "sku": "WOM-BOT-BLU-M-001-3746",
         "size": "M",
-        "color": "Blue",
+        "color": "blue",
         "price": 900,
         "stock": 16,
         "soldCount": 14,
-        "images": ["women-jeans-blue-1.jpg", "women-jeans-blue-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435971/products/product-1775435970251.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435971/products/product-1775435970258.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435971/products/product-1775435970262.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.4,
-    "reviewCount": 29
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bdc",
     "name": "Women Casual Blouse",
     "description": "Lightweight casual blouse suitable for daily wear.",
     "categoryId": "64f000000000000000000011",
-    "coverImage": "women-blouse.jpg",
-    "images": ["women-blouse-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436189/products/product-1775436189120.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436191/products/product-1775436191001.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436191/products/product-1775436191004.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436191/products/product-1775436191006.jpg"
+    ],
+    "ratingsAverage": 4.5,
+    "reviewCount": 21,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "WMN-UP-001",
+        "_id": "69d2d429bf4c97848a949bdd",
+        "sku": "WOM-UPP-WHI-M-001-3759",
         "size": "M",
-        "color": "White",
+        "color": "white",
         "price": 650,
         "stock": 19,
         "soldCount": 16,
-        "images": ["women-blouse-white-1.jpg", "women-blouse-white-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436225/products/product-1775436225065.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436225/products/product-1775436225072.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436225/products/product-1775436225069.jpg"
+        ]
       },
       {
-        "sku": "WMN-UP-002",
+        "_id": "69d2d429bf4c97848a949bde",
+        "sku": "WOM-UPP-BEI-L-002-3759",
         "size": "L",
-        "color": "Beige",
+        "color": "beige",
         "price": 680,
         "stock": 13,
         "soldCount": 11,
-        "images": ["women-blouse-beige-1.jpg", "women-blouse-beige-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436251/products/product-1775436250828.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436251/products/product-1775436250818.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436251/products/product-1775436250838.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.5,
-    "reviewCount": 21
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bdf",
     "name": "Women Silk Scarf",
     "description": "Elegant silk scarf that adds style to any outfit.",
     "categoryId": "64f000000000000000000009",
-    "coverImage": "women-scarf.jpg",
-    "images": ["women-scarf-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436102/products/product-1775436101655.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436103/products/product-1775436103515.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436104/products/product-1775436103519.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436104/products/product-1775436103516.jpg"
+    ],
+    "ratingsAverage": 4.8,
+    "reviewCount": 12,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "WMN-ACC-001",
+        "_id": "69d2d429bf4c97848a949be0",
+        "sku": "WOM-ACC-RED-XXL-001-3786",
         "size": "XXL",
-        "color": "Red",
+        "color": "red",
         "price": 450,
         "stock": 25,
         "soldCount": 9,
-        "images": ["women-scarf-red-1.jpg", "women-scarf-red-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436128/products/product-1775436127517.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436128/products/product-1775436127512.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436128/products/product-1775436127506.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.8,
-    "reviewCount": 12
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949be1",
     "name": "Women Summer Dress",
     "description": "Light and elegant summer dress.",
     "categoryId": "64f000000000000000000011",
-    "coverImage": "women-dress.jpg",
-    "images": ["women-dress-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436918/products/product-1775436917562.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436919/products/product-1775436919312.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436920/products/product-1775436919317.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436920/products/product-1775436919325.jpg"
+    ],
+    "ratingsAverage": 4.6,
+    "reviewCount": 19,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "WMN-DRS-001",
+        "_id": "69d2d429bf4c97848a949be2",
+        "sku": "WOM-UPP-YEL-M-001-3830",
         "size": "M",
-        "color": "Yellow",
+        "color": "yellow",
         "price": 1200,
         "stock": 10,
         "soldCount": 6,
-        "images": ["women-dress-yellow-1.jpg", "women-dress-yellow-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436939/products/product-1775436938964.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436939/products/product-1775436938978.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436940/products/product-1775436939029.jpg"
+        ]
       },
       {
-        "sku": "WMN-DRS-002",
+        "_id": "69d2d429bf4c97848a949be3",
+        "sku": "WOM-UPP-GRE-L-002-3830",
         "size": "L",
-        "color": "Green",
+        "color": "green",
         "price": 1250,
         "stock": 8,
         "soldCount": 4,
-        "images": ["women-dress-green-1.jpg", "women-dress-green-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436952/products/product-1775436952079.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436953/products/product-1775436952085.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775436952/products/product-1775436952061.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.6,
-    "reviewCount": 19
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949be4",
     "name": "Children Sport Sneakers",
     "description": "Durable sneakers designed for active children.",
     "categoryId": "64f000000000000000000012",
-    "coverImage": "kids-sneakers.jpg",
-    "images": ["kids-sneakers-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775433461/products/product-1775433461117.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775433537/products/product-1775433537659.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775433537/products/product-1775433537771.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775433537/products/product-1775433537783.jpg"
+    ],
+    "ratingsAverage": 4.3,
+    "reviewCount": 15,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "KID-SHOE-001",
+        "_id": "69d2d429bf4c97848a949be5",
+        "sku": "CHI-SHO-BLU-S-001-3833",
         "size": "S",
-        "color": "Blue",
+        "color": "blue",
         "price": 650,
         "stock": 20,
         "soldCount": 11,
-        "images": ["kids-shoe-blue-1.jpg", "kids-shoe-blue-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435657/products/product-1775435656579.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435657/products/product-1775435656677.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435657/products/product-1775435656674.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.3,
-    "reviewCount": 15
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949be6",
     "name": "Children Cartoon T-Shirt",
     "description": "Colorful cartoon t-shirt made from soft cotton.",
     "categoryId": "64f000000000000000000015",
-    "coverImage": "kids-tshirt.jpg",
-    "images": ["kids-tshirt-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775438020/products/product-1775438019626.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775438021/products/product-1775438021238.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775438022/products/product-1775438021242.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775438022/products/product-1775438021251.jpg"
+    ],
+    "ratingsAverage": 4.6,
+    "reviewCount": 18,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "KID-UP-001",
+        "_id": "69d2d429bf4c97848a949be7",
+        "sku": "CHI-UPP-YEL-S-001-4313",
         "size": "S",
-        "color": "Yellow",
+        "color": "yellow",
         "price": 350,
         "stock": 30,
         "soldCount": 19,
-        "images": ["kids-tshirt-yellow-1.jpg", "kids-tshirt-yellow-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775438068/products/product-1775438067297.jpg"
+        ]
       },
       {
-        "sku": "KID-UP-002",
+        "_id": "69d2d429bf4c97848a949be8",
+        "sku": "CHI-UPP-RED-M-002-4313",
         "size": "M",
-        "color": "Red",
+        "color": "red",
         "price": 370,
         "stock": 22,
         "soldCount": 14,
-        "images": ["kids-tshirt-red-1.jpg", "kids-tshirt-red-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775438091/products/product-1775438091054.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.6,
-    "reviewCount": 18
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949be9",
     "name": "Children Denim Shorts",
     "description": "Comfortable denim shorts perfect for summer activities.",
     "categoryId": "64f000000000000000000014",
-    "coverImage": "kids-shorts.jpg",
-    "images": ["kids-shorts-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437913/products/product-1775437911998.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437914/products/product-1775437914058.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437914/products/product-1775437914073.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437915/products/product-1775437914226.jpg"
+    ],
+    "ratingsAverage": 4.2,
+    "reviewCount": 9,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "KID-BTM-001",
+        "_id": "69d2d429bf4c97848a949bea",
+        "sku": "CHI-BOT-BLU-S-001-4263",
         "size": "S",
-        "color": "Blue",
+        "color": "blue",
         "price": 400,
         "stock": 22,
         "soldCount": 7,
-        "images": ["kids-shorts-blue-1.jpg", "kids-shorts-blue-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437936/products/product-1775437935381.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437936/products/product-1775437935372.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437936/products/product-1775437935536.jpg"
+        ]
       }
-    ],
-    "ratingsAverage": 4.2,
-    "reviewCount": 9
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949beb",
     "name": "Children Winter Jacket",
     "description": "Warm winter jacket for cold weather.",
     "categoryId": "64f000000000000000000012",
-    "coverImage": "kids-jacket.jpg",
-    "images": ["kids-jacket-1.jpg"],
-    "variants": [
-      {
-        "sku": "KID-UP-003",
-        "size": "M",
-        "color": "Navy",
-        "price": 900,
-        "stock": 12,
-        "soldCount": 5,
-        "images": ["kids-jacket-navy-1.jpg", "kids-jacket-navy-2.jpg"]
-      }
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435839/products/product-1775435838919.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435841/products/product-1775435840753.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435841/products/product-1775435840981.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435841/products/product-1775435840929.jpg"
     ],
     "ratingsAverage": 4.5,
-    "reviewCount": 13
+    "reviewCount": 13,
+    "createdAt": "2026-04-05T21:29:09.886Z",
+    "variants": [
+      {
+        "_id": "69d2d429bf4c97848a949bec",
+        "sku": "CHI-SHO-NAV-M-001-3848",
+        "size": "M",
+        "color": "navy",
+        "price": 1000,
+        "stock": 12,
+        "soldCount": 5,
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435873/products/product-1775435872454.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435873/products/product-1775435872556.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775435873/products/product-1775435872507.jpg"
+        ]
+      }
+    ]
   },
-
   {
+    "_id": "69d2d429bf4c97848a949bed",
     "name": "Children Backpack",
     "description": "Lightweight backpack suitable for school and trips.",
     "categoryId": "64f000000000000000000013",
-    "coverImage": "kids-backpack.jpg",
-    "images": ["kids-backpack-1.jpg"],
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437482/products/product-1775437481859.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437483/products/product-1775437483739.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437484/products/product-1775437483780.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437484/products/product-1775437483741.jpg"
+    ],
+    "ratingsAverage": 4.4,
+    "reviewCount": 10,
+    "createdAt": "2026-04-05T21:29:09.886Z",
     "variants": [
       {
-        "sku": "KID-ACC-001",
+        "_id": "69d2d429bf4c97848a949bee",
+        "sku": "CHI-ACC-GRE-M-001-3903",
         "size": "M",
-        "color": "Green",
+        "color": "green",
         "price": 500,
         "stock": 18,
         "soldCount": 6,
-        "images": ["kids-backpack-green-1.jpg", "kids-backpack-green-2.jpg"]
+        "images": [
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437513/products/product-1775437513127.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437513/products/product-1775437513133.jpg",
+          "https://res.cloudinary.com/duwevb6lb/image/upload/v1775437514/products/product-1775437513179.jpg"
+        ]
       }
+    ]
+  },
+  {
+    "_id": "6a31f3d70a2b994a7dc4e7a2",
+    "name": "Women Gucci bag",
+    "description": "A stylish Gucci bag adds a touch of elegance to any outfit.",
+    "categoryId": "64f000000000000000000009",
+    "coverImage": "https://res.cloudinary.com/duwevb6lb/image/upload/v1781658578/products/product-1781658577900.jpg",
+    "images": [
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1781658581/products/product-1781658580636.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1781658582/products/product-1781658580640.jpg",
+      "https://res.cloudinary.com/duwevb6lb/image/upload/v1781658581/products/product-1781658580681.jpg"
     ],
-    "ratingsAverage": 4.4,
-    "reviewCount": 10
+    "reviewCount": 0,
+    "createdAt": "2026-06-17T00:39:49.312Z",
+    "variants": [
+      {
+        "_id": "6a31f3d70a2b994a7dc4e7a3",
+        "sku": "WOM-ACC-BRO-M-001-3529",
+        "size": "M",
+        "color": "brown",
+        "price": 749,
+        "stock": 20,
+        "soldCount": 0,
+        "images": []
+      },
+      {
+        "_id": "6a31f3d70a2b994a7dc4e7a4",
+        "sku": "WOM-ACC-WHI-S-002-3529",
+        "size": "S",
+        "color": "white",
+        "price": 700,
+        "stock": 5,
+        "soldCount": 0,
+        "images": []
+      }
+    ]
   }
 ]

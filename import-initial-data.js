@@ -1,50 +1,44 @@
 /* eslint-disable no-console */
-const fs = require('fs');
 const mongoose = require('mongoose');
-const Product = require('./models/productModel');
-const Category = require('./models/categoryModel');
-
-// config.env
 const dotenv = require('dotenv');
+
+// config.env — loaded before the models so they see the Cloudinary account the images belong to.
 dotenv.config({ path: './config.env' });
 
-// Get the moc data from the files(JSON)
-const categoryData = JSON.parse(fs.readFileSync(`${__dirname}/data/categories.json`, 'utf-8'));
-const productData = JSON.parse(fs.readFileSync(`${__dirname}/data/products.json`, 'utf-8'));
+const { deleteCatalogue, importCatalogue } = require('./lib/seedCatalogue');
 
-// Connect to DB
-const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
-mongoose.connect(DB).then(() => console.log('DB connection successful!'));
-
-// Add the data
-const importData = async () => {
-  try {
-    // ordered: true — child categories' pre('save') looks up parent by ID; default create([]) saves in parallel.
-    await Category.create(categoryData, { ordered: true });
-
-    await Product.create(productData);
-    console.log('Data added successfully!');
-  } catch (error) {
-    console.log(`Something went wrong! /n ${error}`);
-  }
-  process.exit();
+// --import adds the demo catalogue, --delete removes every product and category,
+// --reset does both (use it to restore the shop after the demo data was changed).
+const actions = {
+  '--import': importCatalogue,
+  '--delete': deleteCatalogue,
+  '--reset': async () => {
+    await deleteCatalogue();
+    await importCatalogue();
+  },
 };
 
-// Delete the Data
-const deleteData = async () => {
-  try {
-    await Category.deleteMany();
-    await Product.deleteMany();
-    console.log('Data deleted successfully!');
-  } catch (error) {
-    console.log(`Something went wrong! /n ${error}`);
+const run = async () => {
+  const action = actions[process.argv[2]];
+
+  if (!action) {
+    console.log('Usage: node import-initial-data.js --import | --delete | --reset');
+    process.exit(1);
   }
-  process.exit();
+
+  try {
+    const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
+    await mongoose.connect(DB);
+    console.log('DB connection successful!');
+
+    await action();
+    console.log(`Done: ${process.argv[2].slice(2)}`);
+  } catch (error) {
+    console.log(`Something went wrong!\n${error}`);
+    process.exitCode = 1;
+  } finally {
+    await mongoose.disconnect();
+  }
 };
 
-// Trigger the action
-if (process.argv[2] === '--import') {
-  importData();
-} else if (process.argv[2] === '--delete') {
-  deleteData();
-}
+run();
