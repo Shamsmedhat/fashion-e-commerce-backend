@@ -64,6 +64,19 @@ const sendErrorProd = (err, res) => {
   }
 };
 
+// Handle invalid / expired JWTs (the client must log in again)
+const handleJWTError = () => new AppError('Invalid token. Please log in again!', 401);
+
+const handleJWTExpiredError = () =>
+  new AppError('Your token has expired! Please log in again.', 401);
+
+// Handle malformed requests rejected before they reach a controller
+const handleBodyParseError = () => new AppError('Request body is not valid JSON.', 400);
+
+const handleBodyTooLargeError = () => new AppError('Request body is too large.', 413);
+
+const handleMalformedUrl = () => new AppError('Request URL is malformed.', 400);
+
 //? Globle ERROR controller that will be sent to Error middleware
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
@@ -73,19 +86,25 @@ module.exports = (err, req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
 
-    // Send errors in prod mode
-  } else if (process.env.NODE_ENV === 'production') {
-    // Add 3 other formated Operational errors to client
+    // Every other environment gets the safe production format, so a missing NODE_ENV can never
+    // leave a request without a response.
+  } else {
+    // Translate the known library errors into Operational errors;
     // we use AppError class to mark them as Operational
     // to send them formated to client
 
     // Logging the error for better debugging
-    console.log('ERROR LOG:', err);
+    if (process.env.NODE_ENV !== 'test') console.log('ERROR LOG:', err);
 
     let error = { ...err, message: err.message };
     if (err.name === 'CastError') error = handleCastErrorDB(err);
     if (err.code === 11000) error = handleDuplicatedFieldDB(err);
     if (err.name === 'ValidationError') error = handleValidationDB(err);
+    if (err.name === 'JsonWebTokenError') error = handleJWTError();
+    if (err.name === 'TokenExpiredError') error = handleJWTExpiredError();
+    if (err.type === 'entity.parse.failed') error = handleBodyParseError();
+    if (err.type === 'entity.too.large') error = handleBodyTooLargeError();
+    if (err instanceof URIError) error = handleMalformedUrl();
 
     sendErrorProd(error, res);
   }

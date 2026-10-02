@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide your name!'],
     maxLength: [20, 'Name must have less than or equal 20 characters!'],
-    minLength: [3, 'Name must be at least 20 characters!'],
+    minLength: [3, 'Name must be at least 3 characters!'],
     trim: true,
   },
   email: {
@@ -83,7 +83,7 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 

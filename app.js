@@ -2,7 +2,6 @@ const express = require('express');
 
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
@@ -16,6 +15,7 @@ const checkoutRoutes = require('./routes/checkoutRoutes');
 const checkoutController = require('./controllers/checkoutController');
 
 const AppError = require('./lib/utils/appError');
+const { browseLimiter, bagLimiter } = require('./lib/utils/rateLimiters');
 
 const app = express();
 
@@ -48,7 +48,7 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error('Not allowed by CORS'));
+    return callback(new AppError('Not allowed by CORS', 403));
   },
   credentials: true,
 };
@@ -65,23 +65,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// General browsing - Products & Categories
-// TODO(serverless): Use a shared store such as Upstash Redis for meaningful cross-instance limits.
-const browseLimiter = rateLimit({
-  max: 200,
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  message: 'Too many requests, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Bag operations (add, update, remove)
-const bagLimiter = rateLimit({
-  max: 30,
-  windowMs: 60 * 1000, // 1 minute
-  message: 'Too many bag operations, please slow down.',
-});
-
 // Stripe webhook must use raw body parser before express.json()
 app.post(
   '/api/v1/checkout/webhook',
@@ -93,24 +76,14 @@ app.post(
 app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 
-// TODO: 2) Security
-
-// Test middleware
-app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-
-  // console.log(req.cookies);
-  next();
-});
-
-// 3) ROUTES
+// 2) ROUTES
 app.use('/api/v1/products', browseLimiter, productRoutes);
 app.use('/api/v1/categories', browseLimiter, categoryRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/bags', bagLimiter, bagRoutes);
 app.use('/api/v1/checkout', checkoutRoutes);
 
-//  4) ERROR Handling
+//  3) ERROR Handling
 // Catch unhandled routes
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} in this server!`, 404));

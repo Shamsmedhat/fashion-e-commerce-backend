@@ -7,7 +7,7 @@ const User = require('./../models/userModel');
 const Bag = require('./../models/bagModel');
 const mongoose = require('mongoose');
 
-const siginToken = (id) => {
+const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
@@ -31,55 +31,58 @@ const normalizeAddresses = (address, addresses = [], { treatFirstAsDefault = tru
 //! I noticed that the user was still being created even though there was a programming error.
 //! So I added a transaction to ensure the user is not created if there’s an issue generating the token.
 exports.signup = catchAsync(async (req, res, next) => {
+  const normalizedAddresses = normalizeAddresses(req.body.address, req.body.addresses);
+
   // Start the transaction session
   const session = await mongoose.startSession();
-  session.startTransaction();
 
   try {
-    const normalizedAddresses = normalizeAddresses(req.body.address, req.body.addresses);
+    let newUser;
+    let token;
 
-    // Create the user
-    const newUser = await User.create(
-      [
-        {
-          name: req.body.name,
-          email: req.body.email,
-          phone: req.body.phone,
-          password: req.body.password,
-          passwordConfirm: req.body.passwordConfirm,
-          ...(normalizedAddresses.length > 0 && { addresses: normalizedAddresses }),
-        },
-      ],
-      { session },
-    );
+    await session.withTransaction(async () => {
+      // Create the user
+      [newUser] = await User.create(
+        [
+          {
+            name: req.body.name,
+            email: req.body.email,
+            phone: req.body.phone,
+            password: req.body.password,
+            passwordConfirm: req.body.passwordConfirm,
+            ...(normalizedAddresses.length > 0 && { addresses: normalizedAddresses }),
+          },
+        ],
+        { session },
+      );
 
-    // If JWT fails here, transaction rolls back the user creation (user not created)
-    const token = siginToken(newUser[0]._id);
-
-    await session.commitTransaction();
-    session.endSession();
+      // If JWT fails here, transaction rolls back the user creation (user not created)
+      token = signToken(newUser._id);
+    });
 
     // Remove password from the res
-    newUser[0].password = undefined;
+    newUser.password = undefined;
 
     // Res
     res.status(201).json({
       status: 'success',
       token,
-      data: { user: newUser[0] },
+      data: { user: newUser },
     });
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    throw err;
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 });
 
 // Login
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password, phone } = req.body;
+
+  // Credentials must be plain text: an object such as { "$gt": "" } would be run as a query operator.
+  if ([email, phone, password].some((value) => value !== undefined && typeof value !== 'string')) {
+    return next(new AppError('Email, phone and password must be text.', 400));
+  }
+
   // 1. Check for email/phone or password
   const hasLoginIdentifier = email || phone;
 
@@ -97,7 +100,7 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findOne(identifier).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new AppError('Incorrect email/phone or password!', 400));
+    return next(new AppError('Incorrect email/phone or password!', 401));
   }
 
   // 2b. Optional guest checkout addresses: merge onto the user profile on sign-in
@@ -113,11 +116,13 @@ exports.login = catchAsync(async (req, res, next) => {
       });
     }
     user.addresses = [...existingAddresses, ...normalizedIncoming];
-    await user.save({ validateBeforeSave: true });
+    // Only the new addresses are validated: the stored password hash and the removed
+    // passwordConfirm would fail a full-document validation.
+    await user.save({ validateModifiedOnly: true });
   }
 
   // 3. Create the token
-  const token = siginToken(user._id);
+  const token = signToken(user._id);
 
   // 4. Get or create user's bag
   let bag = await Bag.findOne({ userId: user._id });
@@ -130,7 +135,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // 5. Send the res
   res.status(200).json({
-    status: 200,
+    status: 'success',
     token,
     data: {
       user,
